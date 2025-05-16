@@ -1,10 +1,81 @@
+//Imports
+//import * as bootstrap from 'bootstrap'
 
-//
-// Place any custom JS here
-//
+//user object
+const user = {
+  //present
+  name: getCookie('userName'),
+  age: getCookie('current-age'),
+  grossIncome: getCookie('gross-income'),
+  //future
+  retirementAge: getCookie('retirement-age'),
+  projectionAge: getCookie('projection-age'),
+};
 
-import * as bootstrap from 'bootstrap'
+function setCookie(name, value, days) {
+  const date = new Date();
+  date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+  document.cookie = `${name}=${value};expires=${date.toUTCString()};path=/`;
+}
 
+function getCookie(name) {
+  const cookies = document.cookie.split('; ');
+  for (let cookie of cookies) {
+    const [key, value] = cookie.split('=');
+    if (key === name) return value;
+  }
+  return null;
+}
+
+//save
+function saveUserData(element){
+
+  setCookie('userName', document.getElementById('nameMe').value, 7);
+}
+
+
+//Questionaire
+function adultDropdownChange(element){
+  let dropdownButton = document.getElementById('adultDropdownMenuButton');
+  dropdownButton.textContent = element.textContent;
+  
+  // Retrieve user data
+  const userName = getCookie('userName');
+  console.log(userName);
+  justMeQuestions();
+};
+
+function justMeQuestions(){
+  const justMeContainer = document.createElement('div');
+  justMeContainer.className = 'container py-5';
+
+  justMeContainer.innerHTML = `
+    <form id="retirement-form">
+      <!-- Questionaire -->
+      <div class="row align-items-end mb-3">
+        <div class="col-md-2">
+          <label for="nameMe" class="form-label">Name</label>
+          <input type="text" class="form-control" id="nameMe" maxlength="20" pattern="[A-Za-z]+" title="Only letters are allowed, up to 20 characters" onChange="saveUserData()" required>
+        </div>
+        <div class="col-sm-2">
+          <label for="current-age" class="form-label">Current Age</label>
+          <input type="number" class="form-control" id="current-age" min="18" max="100" onChange="saveUserData(this)" required>
+        </div>
+        <div class="col-sm-2">
+          <label for="retirement-age" class="form-label">Retirement Age</label>
+          <input type="number" class="form-control" id="retirement-age" min="18" max="100" value="55" onChange="saveUserData(this)" required>
+        </div>
+        <div class="col-sm-2">
+          <label for="projection-age" class="form-label">Projection Age</label>
+          <input type="number" class="form-control" id="projection-age" min="18" max="100" value="100" onChange="saveUserData(this)" required>
+        </div>
+
+    </form>
+  `;
+
+  document.body.appendChild(justMeContainer);
+}
+/*
 document.querySelectorAll('[data-bs-toggle="popover"]')
   .forEach(popover => {
     new bootstrap.Popover(popover)
@@ -51,4 +122,4 @@ document.querySelectorAll('[data-bs-toggle="popover"]')
 
     // Append the table to the container
     tableContainer.appendChild(table);
-  };
+  };*/
