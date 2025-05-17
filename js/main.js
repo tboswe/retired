@@ -64,27 +64,33 @@ function justMeQuestions(){
       </div>
       
       <div class="row align-items-end mb-3" id="personals">
-        <div class="col-md-2">
+        <div class="col-lg-2">
           <label for="name-me" class="form-label">Name</label>
           <input type="text" class="form-control" id="name-me" maxlength="20" pattern="[A-Za-z]+" title="Only letters are allowed, up to 20 characters" onChange="saveUserData()" required>
         </div>
-        <div class="col-sm-2">
+        <div class="col-lg-1">
           <label for="current-age" class="form-label">Current Age</label>
           <input type="number" class="form-control" id="current-age" min="18" max="100" onChange="saveUserData(this)" required>
         </div>
-        <div class="col-sm-2">
+        <div class="col-lg-1">
           <label for="retirement-age" class="form-label">Retirement Age</label>
           <input type="number" class="form-control" id="retirement-age" min="18" max="100" value="55" onChange="saveUserData(this)" required>
         </div>
-        <div class="col-sm-2">
+        <div class="col-lg-1">
           <label for="projection-age" class="form-label">Projection Age</label>
           <input type="number" class="form-control" id="projection-age" min="18" max="100" value="100" onChange="saveUserData(this)" required>
         </div>
-        <div class="col-sm-2">
+        <div class="col-lg-2">
           <label for="gross-income" class="form-label">Gross Income</label>
           <input type="number" class="form-control" id="gross-income" min="0" max="10000000" value="50000" step="1000" onChange="saveUserData(this)" required>
         </div>
-        <div class="col-sm-2">
+        <div class="col-lg-1">
+          <input class="form-check-input" type="checkbox" id="eiCheckbox">
+          <label class="form-check-label" for="eiCheckbox">EI</label>
+          <input class="form-check-input" type="checkbox" id="cppCheckbox">
+          <label class="form-check-label" for="cppCheckbox">CPP</label>
+        </div>
+        <div class="col-lg-1">
           <button type="button" id="toggle-lock" class="btn btn-outline-secondary btn-sm" onClick="toggleLock()">
             <i id="lock-icon" class="bi bi-lock"></i> Lock
           </button>
@@ -94,13 +100,16 @@ function justMeQuestions(){
       <div class="row align-items-end mb-3">
         <div class="col-sm-2">
           <label for="inflation-rate" class="form-label">Inflation Rate</label>
-          <input type="number" class="form-control" id="inflation-rate" min="0" max="100" value="3" step="0.1" onChange="saveUserData(this)" required>
+          <input type="number" class="form-control" id="inflation-rate" min="0" max="100" value="3" step="1" onChange="saveUserData(this)" required>
         </div>
         <div class="col-sm-2">
-          <label for="investment-rate" class="form-label ">Investment Rate</label>
-          <input type="number" class="form-control" id="investment-rate" min="0" max="100" value="5" step="0.1" onChange="saveUserData(this)" required>
+          <label for="investment-rate" class="form-label ">Investment Return Rate</label>
+          <input type="number" class="form-control" id="investment-rate" min="0" max="100" value="7" step="1" onChange="saveUserData(this)" required>
         </div>
-
+        <div class="col-sm-2">
+          <label for="income-raises-rate" class="form-label">Income Raise Rate</label>
+          <input type="number" class="form-control" id="raise-rate" min="0" max="100" value="3" step="5" onChange="saveUserData(this)" required>
+        </div>
     </form>
   `;
 
