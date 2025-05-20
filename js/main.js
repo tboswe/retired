@@ -110,6 +110,19 @@ function justMeQuestions(){
           </button>
         </div>
       </div>
+        <h1 class="h4 mb-3">Income</h1>
+        <div class="row align-items-end mb-3">
+          <div class="col-lg-1">
+            <button type="button" id="add-income-button" class="btn btn-primary btn-sm" onClick="addIncome()">
+              <i class="bi bi-plus"></i> Add
+            </button>
+          </div>
+          <div class="col-lg-1">
+            <button type="button" id="income-lock-button" class="btn btn-outline-secondary btn-sm" onClick="lockIncome()">
+              <i class="bi bi-plus"></i> Lock
+            </button>
+          </div>
+        </div>
         <h1 class="h4 mb-3">Savings</h1>
         <div class="row align-items-end mb-3">
           <div class="col-lg-1">
@@ -157,6 +170,190 @@ function justMeQuestions(){
 }
 
 //Init me and my partner
+
+//Income Functions
+function addIncome() {
+    const incomeRow = document.createElement('div');
+    incomeRow.className = 'row align-items-end mb-3';
+  
+    incomeRow.innerHTML = `
+      <div class="col-lg-2">
+        <label for="income-type" class="form-label">Income Type</label>
+        <select class="form-select" id="account-type" placeholder="Choose" onChange="incomeChange(this)" required>
+          <option value="salary">Base Salary</option>
+          <option value="bonus">Bonus</option>
+          <option value="rsu">RSU</option>
+          <option value="net">Net Income</option>
+        </select>
+      </div>
+        <div class="col-lg-2">
+          <label for="income-name" class="form-label">Income Name</label>
+          <input type="text" class="form-control" id="income-name" placeholder="Company Name" required>
+        </div>
+        <div class="col-lg-2">
+          <label for="income-amount" class="form-label">Amount</label>
+          <input type="number" class="form-control" id="income-amount" min="0" step="100" placeholder="100000" required>
+        </div>
+        <div class="col-lg-1">
+          <label for="income-frequency" class="form-label ">Frequency</label>
+          <select class="form-select" id="income-frequency" placeholder="Choose" onChange="incomeFrequencyChange(this)" required>
+            <option value="yearly">Yearly</option>
+            <option value="monthly">Monthly</option>
+            <option value="Bi-monthly">Bi-monthly</option>
+            <option value="Bi-weekly">Bi-weekly</option>
+          </select>
+        </div> 
+      <div class="col-lg-1">
+        <button type="button" class="btn btn-danger btn-sm remove-row">
+          <i class="bi bi-trash"></i> Remove
+        </button>
+      </div>
+    `;
+  
+    // Append the new row to the income section
+    const incomeSection = document.querySelector('#add-income-button').parentNode.parentNode;
+    incomeSection.appendChild(incomeRow);
+  
+    // Add event listener to the remove button
+    incomeRow.querySelector('.remove-row').addEventListener('click', () => {
+      incomeRow.remove();
+    });
+  }
+
+  function incomeChange(selectElement) {
+    const selectedValue = selectElement.value; // Get the selected dropdown value
+    const row = selectElement.closest('.row'); // Get the parent row of the dropdown
+
+    // Clear the row's content except for the dropdown
+    row.innerHTML = `
+      <div class="col-lg-2">
+        <label for="income-type" class="form-label">Income Type</label>
+        <select class="form-select" id="income-type" onChange="incomeChange(this)" required>
+          <option value="salary" ${selectedValue === 'salary' ? 'selected' : ''}>Base Salary</option>
+          <option value="bonus" ${selectedValue === 'bonus' ? 'selected' : ''}>Bonus</option>
+          <option value="rsu" ${selectedValue === 'rsu' ? 'selected' : ''}>RSU</option>
+          <option value="net" ${selectedValue === 'net' ? 'selected' : ''}>Net Salary</option>
+        </select>
+      </div>
+    `;
+  
+    // Add additional fields based on the selected value
+    if (selectedValue === 'salary') {
+      row.innerHTML += `
+        <div class="col-lg-2">
+          <label for="income-name" class="form-label">Income Name</label>
+          <input type="text" class="form-control" id="income-name" placeholder="Company Name" required>
+        </div>
+        <div class="col-lg-2">
+          <label for="income-amount" class="form-label">Amount</label>
+          <input type="number" class="form-control" id="income-amount" min="0" step="100" placeholder="100000" required>
+        </div>
+        <div class="col-lg-1">
+          <label for="income-frequency" class="form-label ">Frequency</label>
+          <select class="form-select" id="income-frequency" placeholder="Choose" onChange="incomeFrequencyChange(this)" required>
+            <option value="yearly">Yearly</option>
+            <option value="monthly">Monthly</option>
+            <option value="Bi-monthly">Bi-monthly</option>
+            <option value="Bi-weekly">Bi-weekly</option>
+          </select>
+        </div>
+        <div class="col-lg-2">
+          <label for="income-deductions" class="form-label">Non-tax Deductions</label>
+          <input type="number" class="form-control" id="income-amount" min="0" step="100" placeholder="200" required>
+        </div>
+        <div class="col-lg-1">
+          <label for="income-deductions-frequency" class="form-label ">Frequency</label>
+          <select class="form-select" id="income-deductions-frequency" placeholder="Choose" onChange="incomeDeductionsFrequencyChange(this)" required>
+            <option value="yearly">Yearly</option>
+            <option value="monthly">Monthly</option>
+            <option value="Bi-monthly">Bi-monthly</option>
+            <option value="Bi-weekly">Bi-weekly</option>
+          </select>
+        </div>
+      <div class="col-lg-1">
+        <button type="button" class="btn btn-danger btn-sm remove-row">
+          <i class="bi bi-trash"></i> Remove
+        </button>
+      </div>
+
+      `;
+    } else if (selectedValue === 'bonus') {
+      row.innerHTML += `
+        <div class="col-lg-2">
+          <label for="bonus-name" class="form-label">Bonus Name</label>
+          <input type="text" class="form-control" id="bonus-name" placeholder="Company XYZ" required>
+        </div>
+        <div class="col-lg-1">
+          <label for="bonus-percentage" class="form-label">%</label>
+          <input type="number" class="form-control" id="bonus-percentage" min="0" max="100" value="7" step="1" onChange="saveUserData(this)" required>
+        </div>
+        <div class="col-lg-2">      
+          <label for="bonus-amount" class="form-label">Amount</label>
+          <input type="number" class="form-control" id="bonus-amount" min="0" step="100" placeholder="Amount" required>
+        </div>        
+      `;      
+    } else if (selectedValue === 'rsu'){
+      row.innerHTML += `
+      <div class="col-lg-2">
+        <label for="account-name" class="form-label">Account Name</label>
+        <input type="text" class="form-control" id="account-name" placeholder="Account Nickname" required>
+      </div>
+      <div class="col-lg-2">
+        <label for="contributor" class="form-label">Contributor</label>
+        <input type="text" class="form-control" id="contributor" placeholder="Who contributes" required>
+      </div>
+      <div class="col-lg-2">
+        <label for="annuitant" class="form-label">Annuitant</label>
+        <input type="text" class="form-control" id="annuitant" placeholder="Who receives" required>
+      </div>          
+      <div class="col-lg-2">
+        <label for="account-balance" class="form-label">Balance</label>
+        <input type="number" class="form-control" id="account-balance" min="0" step="100" placeholder="Enter balance" required>
+      </div>
+      <div class="col-lg-1">
+          <label for="investment-rate" class="form-label ">Return Rate</label>
+          <input type="number" class="form-control" id="investment-rate" min="0" max="100" value="7" step="1" onChange="saveUserData(this)" required>
+      </div>
+      `;
+    } else if (selectedValue === 'net') {
+      row.innerHTML += `
+        <div class="col-lg-2">
+          <label for="account-name" class="form-label">Account Name</label>
+          <input type="text" class="form-control" id="account-name" placeholder="Account Nickname" required>
+        </div>
+        <div class="col-lg-2">
+          <label for="annuitant" class="form-label">Annuitant</label>
+          <input type="text" class="form-control" id="annuitant" placeholder="Who receives" required>
+        </div>   
+        <div class="col-lg-2">
+          <label for="account-balance" class="form-label">Balance</label>
+          <input type="number" class="form-control" id="account-balance" min="0" step="100" placeholder="Enter balance" required>
+        </div>
+        <div class="col-lg-1">
+          <label for="match-rate" class="form-label ">Match Rate</label>
+          <input type="number" class="form-control" id="match-rate" min="0" max="100" value="4" step="1" onChange="saveUserData(this)" required>
+        </div>
+        <div class="col-lg-1">
+          <label for="investment-rate" class="form-label ">Return Rate</label>
+          <input type="number" class="form-control" id="investment-rate" min="0" max="100" value="7" step="1" onChange="saveUserData(this)" required>
+        </div> 
+      `;
+    }
+  
+    // Add the remove button back to the row
+    row.innerHTML += `
+      <div class="col-lg-1">
+        <button type="button" class="btn btn-danger btn-sm remove-row">
+          <i class="bi bi-trash"></i> Remove
+        </button>
+      </div>
+    `;
+  
+    // Add event listener to the remove button
+    row.querySelector('.remove-row').addEventListener('click', () => {
+      row.remove();
+    });
+  }
 
 //Savings Functions
 function addSavings() {
@@ -432,7 +629,7 @@ function addPension() {
     </div>
   `;
 
-    // Append the new row to the Savings section
+    // Append the new row to the Pension section
     const pensionsSection = document.querySelector('#add-pension-button').parentNode.parentNode;
     pensionsSection.appendChild(pensionsRow);
 
