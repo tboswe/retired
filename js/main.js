@@ -17,6 +17,7 @@ const user = {
   indexationRate: 0.03,
 };
 
+//Cookiedough
 function setCookie(name, value, days) {
   const date = new Date();
   date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
@@ -32,13 +33,13 @@ function getCookie(name) {
   return null;
 }
 
-//save
+//SAVE
 function saveUserData(element){
 
   setCookie('name-me', document.getElementById('name-me').value, 7);
 }
 
-
+//INIT
 //Questionaire
 function adultDropdownChange(element){
   let dropdownButton = document.getElementById('adultDropdownMenuButton');
@@ -50,6 +51,7 @@ function adultDropdownChange(element){
   justMeQuestions();
 };
 
+//Init Just Me
 function justMeQuestions(){
   const justMeContainer = document.createElement('div');
   justMeContainer.className = 'container py-5';
@@ -81,37 +83,72 @@ function justMeQuestions(){
           <input type="number" class="form-control" id="projection-age" min="18" max="100" value="100" onChange="saveUserData(this)" required>
         </div>
         <div class="col-lg-2">
-          <label for="gross-income" class="form-label">Gross Income</label>
-          <input type="number" class="form-control" id="gross-income" min="0" max="10000000" value="50000" step="1000" onChange="saveUserData(this)" required>
+          <label for="base-income" class="form-label">Base Income</label>
+          <input type="number" class="form-control" id="base-income" min="0" max="10000000" value="50000" step="1000" onChange="saveUserData(this)" required>
         </div>
         <div class="col-lg-1">
-          <label for="income-raises-rate" class="form-label">Income Raise Rate</label>
+          <label for="bonus-income" class="form-label">Bonus</label>
+          <input type="number" class="form-control" id="bonus-income" min="0" max="200" value="12" step="1" onChange="saveUserData(this)" required>
+        </div>
+        <div class="col-lg-2">
+          <label for="stock-income" class="form-label">Stock</label>
+          <input type="number" class="form-control" id="stock-income" min="0" max="10000000" value="50000" step="1000" onChange="saveUserData(this)" required>
+        </div>
+        <div class="col-lg-1">
+          <label for="raise-rate" class="form-label">Raise Rate</label>
           <input type="number" class="form-control" id="raise-rate" min="0" max="100" value="5" step="1" onChange="saveUserData(this)" required>
         </div>
         <div class="col-lg-1">
-          <input class="form-check-input" type="checkbox" id="eiCheckbox">
           <label class="form-check-label" for="eiCheckbox">EI</label>
-          <input class="form-check-input" type="checkbox" id="cppCheckbox">
+          <input class="form-check-input" type="checkbox" id="eiCheckbox" onChange="ei(this)">
           <label class="form-check-label" for="cppCheckbox">CPP</label>
+          <input class="form-check-input" type="checkbox" id="cppCheckbox" onChange="cpp(this)">
         </div>
         <div class="col-lg-1">
-          <button type="button" id="toggle-lock" class="btn btn-outline-secondary btn-sm" onClick="toggleLock()">
+          <button type="button" id="personals-lock-button" class="btn btn-outline-secondary btn-sm" onClick="LockPersonals()">
             <i id="lock-icon" class="bi bi-lock"></i> Lock
           </button>
         </div>
       </div>
         <h1 class="h4 mb-3">Savings</h1>
         <div class="row align-items-end mb-3">
-        <div class="col-lg-1">
-          <button type="button" id="add-button" class="btn btn-primary btn-sm" onClick="addSavingsAccount()">
-            <i class="bi bi-plus"></i> Add
-          </button>
+          <div class="col-lg-1">
+            <button type="button" id="add-savings-button" class="btn btn-primary btn-sm" onClick="addSavings()">
+              <i class="bi bi-plus"></i> Add
+            </button>
+          </div>
+          <div class="col-lg-1">
+            <button type="button" id="savings-lock-button" class="btn btn-outline-secondary btn-sm" onClick="lockSavings()">
+              <i class="bi bi-plus"></i> Lock
+            </button>
+          </div>
         </div>
-        <div class="col-lg-1">
-          <button type="button" id="savings-lock-button" class="btn btn-outline-secondary btn-sm" onClick="lockSavings()">
-            <i class="bi bi-plus"></i> Lock
-          </button>
-        </div>        
+        <h1 class="h4 mb-3">Pensions</h1>
+        <div class="row align-items-end mb-3">
+          <div class="col-lg-1">
+            <button type="button" id="add-pension-button" class="btn btn-primary btn-sm" onClick="addPension()">
+              <i class="bi bi-plus"></i> Add
+            </button>
+          </div>
+          <div class="col-lg-1">
+            <button type="button" id="pensions-lock-button" class="btn btn-outline-secondary btn-sm" onClick="lockPensions()">
+              <i class="bi bi-plus"></i> Lock
+            </button>
+          </div>
+        </div>
+        <h1 class="h4 mb-3">Assets</h1>
+        <div class="row align-items-end mb-3">
+          <div class="col-lg-1">
+            <button type="button" id="add-asset-button" class="btn btn-primary btn-sm" onClick="addAsset()">
+              <i class="bi bi-plus"></i> Add
+            </button>
+          </div>
+          <div class="col-lg-1">
+            <button type="button" id="assets-lock-button" class="btn btn-outline-secondary btn-sm" onClick="lockAssets()">
+              <i class="bi bi-plus"></i> Lock
+            </button>
+          </div>
+        </div>            
 
     </form>
   `;
@@ -119,14 +156,17 @@ function justMeQuestions(){
   document.body.appendChild(justMeContainer);
 }
 
-function addSavingsAccount() {
+//Init me and my partner
+
+//Savings Functions
+function addSavings() {
     const savingsRow = document.createElement('div');
     savingsRow.className = 'row align-items-end mb-3';
   
     savingsRow.innerHTML = `
       <div class="col-lg-2">
         <label for="account-type" class="form-label">Account Type</label>
-        <select class="form-select" id="account-type" onChange="savingsAccountChange(this)" required>
+        <select class="form-select" id="account-type" placeholder="Choose" onChange="savingsChange(this)" required>
           <option value="cash">Cash</option>
           <option value="margin">Margin</option>
           <option value="rsp">RSP</option>
@@ -158,8 +198,8 @@ function addSavingsAccount() {
     `;
   
     // Append the new row to the Savings section
-    const savingsSection = document.querySelector('.row.align-items-end.mb-3:last-of-type');
-    savingsSection.parentNode.insertBefore(savingsRow, savingsSection.nextSibling);
+    const savingsSection = document.querySelector('#add-savings-button').parentNode.parentNode;
+    savingsSection.appendChild(savingsRow);
   
     // Add event listener to the remove button
     savingsRow.querySelector('.remove-row').addEventListener('click', () => {
@@ -167,7 +207,7 @@ function addSavingsAccount() {
     });
   }
 
-function savingsAccountChange(selectElement) {
+function savingsChange(selectElement) {
     const selectedValue = selectElement.value; // Get the selected dropdown value
     const row = selectElement.closest('.row'); // Get the parent row of the dropdown
   
@@ -175,7 +215,7 @@ function savingsAccountChange(selectElement) {
     row.innerHTML = `
       <div class="col-lg-2">
         <label for="account-type" class="form-label">Account Type</label>
-        <select class="form-select" id="account-type" onChange="savingsAccountChange(this)" required>
+        <select class="form-select" id="account-type" onChange="savingsChange(this)" required>
           <option value="cash" ${selectedValue === 'cash' ? 'selected' : ''}>Cash</option>
           <option value="margin" ${selectedValue === 'margin' ? 'selected' : ''}>Margin</option>
           <option value="rsp" ${selectedValue === 'rsp' ? 'selected' : ''}>RSP</option>
@@ -353,70 +393,142 @@ function savingsAccountChange(selectElement) {
     });
   }
 
+//Pension Functions
+function addPension() {
+  const pensionsRow = document.createElement('div');
+  pensionsRow.className = 'row align-items-end mb-3';
 
-function toggleLock() {
-  const lockIcon = document.getElementById('lock-icon');
-  const inputs = document.querySelectorAll('#retirement-form input');
+  pensionsRow.innerHTML = `
+    <div class="col-lg-2">
+      <label for="pension-type" class="form-label">Pension Type</label>
+      <select class="form-select" id="pension-type" onChange="pensionsChange(this)" required>
+        <option value="defined-benefit">Defined Benefit</option>
+        <option value="defined-contribution">Defined Contribution</option>
+        <option value="lif">LIF</option>
+      </select>
+    </div>
+    <div class="col-lg-2">
+      <label for="pension-name" class="form-label">Pension Name</label>
+      <input type="text" class="form-control" id="pension-name" placeholder="Pension Name" required>
+    </div>
+    <div class="col-lg-2">
+      <label for="pension-balance" class="form-label">Bala nce</label>
+      <input type="number" class="form-control" id="pension-balance" min="0" step="100" placeholder="Enter balance" required>
+    </div>
+    <div class="col-lg-1">
+      <label for="return-rate" class="form-label ">Return Rate</label>
+      <input type="number" class="form-control" id="investment-rate" min="0" max="100" value="4" step="1" onChange="saveUserData(this)" required>
+    </div>
+    <div class="col-lg-1">
+      <label for="pension-mode" class="form-label">Pension Mode</label>
+        <select class="form-select" id="pension-mode" onChange="xxx(this)" required>
+          <option value="cash">Best 5</option>
+        </select>
+    </div> 
+    <div class="col-lg-1">
+      <button type="button" class="btn btn-danger btn-sm remove-row">
+        <i class="bi bi-trash"></i> Remove
+      </button>
+    </div>
+  `;
 
-  if (lockIcon.classList.contains('bi-lock')) {
-    // Unlock: Make fields editable
-    lockIcon.classList.remove('bi-lock');
-    lockIcon.classList.add('bi-unlock');
-    lockIcon.parentElement.textContent = ' Unlock';
-    inputs.forEach(input => input.removeAttribute('readonly'));
-  } else {
-    // Lock: Make fields read-only
-    lockIcon.classList.remove('bi-unlock');
-    lockIcon.classList.add('bi-lock');
-    lockIcon.parentElement.textContent = ' Lock';
-    inputs.forEach(input => input.setAttribute('readonly', true));
-  }
+    // Append the new row to the Savings section
+    const pensionsSection = document.querySelector('#add-pension-button').parentNode.parentNode;
+    pensionsSection.appendChild(pensionsRow);
+
+  // Add event listener to the remove button
+  pensionsRow.querySelector('.remove-row').addEventListener('click', () => {
+    pensionsRow.remove();
+  });
 }
-/*
-document.querySelectorAll('[data-bs-toggle="popover"]')
-  .forEach(popover => {
-    new bootstrap.Popover(popover)
-  })
 
- let incomeForecast = (e) => {
-    // Sample data for the table
-    const data = [
-      { year: 2025, age: 30, income: 50000, savings: 10000 },
-      { year: 2026, age: 31, income: 52000, savings: 15000 },
-      { year: 2027, age: 32, income: 54000, savings: 20000 },
-    ];
+function pensionsChange(selectElement) {
+  const selectedValue = selectElement.value; // Get the selected dropdown value
+  const row = selectElement.closest('.row'); // Get the parent row of the dropdown
 
-    // Generate the table
-    const tableContainer = document.getElementById("table-container");
-    const table = document.createElement("table");
-    table.className = "table table-striped table-bordered";
+  // Clear the row's content except for the dropdown
+  row.innerHTML = `
+    <div class="col-lg-2">
+      <label for="pension-type" class="form-label">Pension Type</label>
+      <select class="form-select" id="pension-type" onChange="pensionsChange(this)" required>
+        <option value="defined-benefit" ${selectedValue === 'defined-benefit' ? 'selected' : ''}>Defined Benefit</option>
+        <option value="defined-contribution" ${selectedValue === 'defined-contribution' ? 'selected' : ''}>Defined Contribution</option>
+        <option value="lif" ${selectedValue === 'lif' ? 'selected' : ''}>LIF</option>
+      </select>
+    </div>
+  `;
 
-    // Create the table header
-    const thead = document.createElement("thead");
-    thead.innerHTML = `
-      <tr>
-        <th>Year</th>
-        <th>Age</th>
-        <th>Income</th>
-        <th>Savings</th>
-      </tr>
+  if (selectedValue === 'defined-benefit') {
+    row.innerHTML += `
+      <div class="col-lg-2">
+        <label for="pension-name" class="form-label">Pension Name</label>
+        <input type="text" class="form-control" id="pension-name" placeholder="Pension Name" required>
+      </div>
+      <div class="col-lg-2">
+        <label for="pension-balance" class="form-label">Balance</label>
+        <input type="number" class="form-control" id="pension-balance" min="0" step="100" placeholder="Enter balance" required>
+      </div>
+      <div class="col-lg-1">
+        <label for="return-rate" class="form-label ">Return Rate</label>
+        <input type="number" class="form-control" id="investment-rate" min="0" max="100" value="4" step="1" onChange="saveUserData(this)" required>
+      </div>
+      <div class="col-lg-1">
+        <label for="pension-mode" class="form-label">Pension Mode</label>
+        <select class="form-select" id="pension-mode" onChange="xxx(this)" required>
+          <option value="cash">Best 5</option>
+        </select>
+      </div>
     `;
-    table.appendChild(thead);
-
-    // Create the table body
-    const tbody = document.createElement("tbody");
-    data.forEach((row) => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${row.year}</td>
-        <td>${row.age}</td>
-        <td>${row.income}</td>
-        <td>${row.savings}</td>
+  } else if (selectedValue === 'defined-contribution') {
+    row.innerHTML += `
+      <div class="col-lg-2">
+        <label for="pension-name" class="form-label">Pension Name</label>
+        <input type="text" class="form-control" id="pension-name" placeholder="Pension Name" required>
+      </div>
+      <div class="col-lg-2">
+        <label for="pension-balance" class="form-label">Balance</label>
+        <input type="number" class="form-control" id="pension-balance" min="0" step="100" placeholder="Enter balance" required>
+      </div>
+      <div class="col-lg-1">
+        <label for="return-rate" class="form-label ">Return Rate</label>
+        <input type="number" class="form-control" id="investment-rate" min="0" max="100" value="4" step="1" onChange="saveUserData(this)" required>
+      </div>
       `;
-      tbody.appendChild(tr);
-    });
-    table.appendChild(tbody);
+  } else if (selectedValue === 'lif') {
+    row.innerHTML += `
+      <div class="col-lg-2">
+        <label for="pension-name" class="form-label">Pension Name</label>
+        <input type="text" class="form-control" id="pension-name" placeholder="Pension Name" required>
+      </div>
+      <div class="col-lg-2">
+        <label for="pension-balance" class="form-label">Balance</label>
+        <input type="number" class="form-control" id="pension-balance" min="0" step="100" placeholder="Enter balance" required>
+      </div>
+      <div class="col-lg-1">
+        <label for="return-rate" class="form-label ">Return Rate</label>
+        <input type="number" class="form-control" id="investment-rate" min="0" max="100" value="4" step="1" onChange="saveUserData(this)" required>
+      </div>
+      <div class="col-lg-1">
+        <label for="lif-start" class="form-label">LIF Start Year</label>
+        <input type="number" class="form-control" id="lif-start" min="0" step="1" placeholder="Enter year of LIF start" required>
+      </div>
+      `;
+  };
 
-    // Append the table to the container
-    tableContainer.appendChild(table);
-  };*/
+  // Add the remove button back to the row
+  row.innerHTML += `
+      <div class="col-lg-1">
+        <button type="button" class="btn btn-danger btn-sm remove-row">
+          <i class="bi bi-trash"></i> Remove
+        </button>
+      </div>
+    `;
+
+  // Add event listener to the remove button
+  row.querySelector('.remove-row').addEventListener('click', () => {
+    row.remove();
+  });
+}
+//Asset Functions
+
+//Debt Functions
