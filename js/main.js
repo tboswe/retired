@@ -4,40 +4,27 @@
 //user object
 const user = {
   //present
-  name: getCookie('name-me'),
-  age: getCookie('current-age'),
-  grossIncome: getCookie('gross-income'),
+  name: 'John Doe',
+  age: 18,
   //future
-  retirementAge: getCookie('retirement-age'),
-  projectionAge: getCookie('projection-age'),
+  retirementAge: 55,
+  projectionAge: 100,
   //rates
   inflationRate: 0.03,
-  investmentRate: 0.05,
-  raiseRate: 0.03,
+  investmentRate: 0.07,
+  raiseRate: 0.05,
   indexationRate: 0.03,
 };
 
-//Cookiedough
-function setCookie(name, value, days) {
-  const date = new Date();
-  date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
-  document.cookie = `${name}=${value};expires=${date.toUTCString()};path=/`;
-}
-
-function getCookie(name) {
-  const cookies = document.cookie.split('; ');
-  for (let cookie of cookies) {
-    const [key, value] = cookie.split('=');
-    if (key === name) return value;
-  }
-  return null;
-}
-
 //SAVE
 function saveUserData(element){
+  //personal
+  user.name = document.getElementById('name-me').value;
+  user.age = parseInt(document.getElementById('current-age').value);
+  user.retirementAge = parseInt(document.getElementById('retirement-age').value);
+  user.projectionAge = parseInt(document.getElementById('projection-age').value);
 
-  setCookie('name-me', document.getElementById('name-me').value, 7);
-}
+};
 
 //INIT
 //Questionaire
@@ -45,9 +32,6 @@ function adultDropdownChange(element){
   let dropdownButton = document.getElementById('adultDropdownMenuButton');
   dropdownButton.textContent = element.textContent;
   
-  // Retrieve user data
-  const userName = getCookie('userName');
-  console.log(userName);
   justMeQuestions();
 };
 
@@ -82,49 +66,18 @@ function justMeQuestions(){
           <label for="projection-age" class="form-label">Projection Age</label>
           <input type="number" class="form-control" id="projection-age" min="18" max="100" value="100" onChange="saveUserData(this)" required>
         </div>
-        <div class="col-lg-2">
-          <label for="base-income" class="form-label">Base Income</label>
-          <input type="number" class="form-control" id="base-income" min="0" max="10000000" value="50000" step="1000" onChange="saveUserData(this)" required>
+      </div>
+      <h1 class="h4 mb-3">Income</h1>
+      <div class="row align-items-end mb-3">
+        <div class="col-lg-1">
+          <button type="button" id="add-income-button" class="btn btn-primary btn-sm" onClick="addIncome()"><i class="bi bi-plus"></i> Add</button>
         </div>
         <div class="col-lg-1">
-          <label for="bonus-income" class="form-label">Bonus</label>
-          <input type="number" class="form-control" id="bonus-income" min="0" max="200" value="12" step="1" onChange="saveUserData(this)" required>
-        </div>
-        <div class="col-lg-2">
-          <label for="stock-income" class="form-label">Stock</label>
-          <input type="number" class="form-control" id="stock-income" min="0" max="10000000" value="50000" step="1000" onChange="saveUserData(this)" required>
-        </div>
-        <div class="col-lg-1">
-          <label for="raise-rate" class="form-label">Raise Rate</label>
-          <input type="number" class="form-control" id="raise-rate" min="0" max="100" value="5" step="1" onChange="saveUserData(this)" required>
-        </div>
-        <div class="col-lg-1">
-          <label class="form-check-label" for="eiCheckbox">EI</label>
-          <input class="form-check-input" type="checkbox" id="eiCheckbox" onChange="ei(this)">
-          <label class="form-check-label" for="cppCheckbox">CPP</label>
-          <input class="form-check-input" type="checkbox" id="cppCheckbox" onChange="cpp(this)">
-        </div>
-        <div class="col-lg-1">
-          <button type="button" id="personals-lock-button" class="btn btn-outline-secondary btn-sm" onClick="LockPersonals()">
-            <i id="lock-icon" class="bi bi-lock"></i> Lock
-          </button>
+          <button type="button" id="income-lock-button" class="btn btn-outline-secondary btn-sm" onClick="lockIncome()"><i class="bi bi-plus"></i> Lock</button>
         </div>
       </div>
-        <h1 class="h4 mb-3">Income</h1>
-        <div class="row align-items-end mb-3">
-          <div class="col-lg-1">
-            <button type="button" id="add-income-button" class="btn btn-primary btn-sm" onClick="addIncome()">
-              <i class="bi bi-plus"></i> Add
-            </button>
-          </div>
-          <div class="col-lg-1">
-            <button type="button" id="income-lock-button" class="btn btn-outline-secondary btn-sm" onClick="lockIncome()">
-              <i class="bi bi-plus"></i> Lock
-            </button>
-          </div>
-        </div>
-        <h1 class="h4 mb-3">Savings</h1>
-        <div class="row align-items-end mb-3">
+      <h1 class="h4 mb-3">Savings</h1>
+      <div class="row align-items-end mb-3">
           <div class="col-lg-1">
             <button type="button" id="add-savings-button" class="btn btn-primary btn-sm" onClick="addSavings()">
               <i class="bi bi-plus"></i> Add
@@ -270,6 +223,14 @@ function addIncome() {
             <option value="Bi-weekly">Bi-weekly</option>
           </select>
         </div>
+        <div class="col-lg-1">
+          <label for="income-from-range" class="form-label ">From</label>
+          <input type="number" class="form-control" id="income-from-range" min="2000" max="3000" value="2025" step="1" onChange="saveUserData(this)" required>
+        </div>
+        <div class="col-lg-1">
+          <label for="income-to-range" class="form-label ">To</label>
+          <input type="number" class="form-control" id="income-to-range" min="2000" max="3000" value="2030" step="1" onChange="saveUserData(this)" required>
+        </div>          
       <div class="col-lg-1">
         <button type="button" class="btn btn-danger btn-sm remove-row">
           <i class="bi bi-trash"></i> Remove
@@ -729,3 +690,50 @@ function pensionsChange(selectElement) {
 //Asset Functions
 
 //Debt Functions
+
+//Projection
+function generateProjection(startAge, endAge, columns) {
+  // columns: array of column names
+
+  // Find or create the container
+  let container = document.getElementById('table-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'table-container';
+    container.className = 'table-responsive my-4';
+    document.body.appendChild(container);
+  }
+  container.innerHTML = '';
+
+  // Create table
+  const table = document.createElement('table');
+  table.className = 'table table-striped table-bordered';
+
+  // Header
+  const thead = document.createElement('thead');
+  let headerRow = '';
+  columns.forEach(col => headerRow += `<th>${col}</th>`);
+  headerRow += '</tr>';
+  thead.innerHTML = headerRow;
+  table.appendChild(thead);
+
+  // Body
+  const tbody = document.createElement('tbody');
+  for (let age = startAge; age <= endAge; age++) {
+    let row = `<tr><td>${age}</td>`;
+    cell => row += `<td>${cell}</td>`
+    row += '</tr>';
+    tbody.innerHTML += row;
+  }
+  table.appendChild(tbody);
+
+  container.appendChild(table);
+}
+
+function generate() {
+  generateProjection(
+  user.age, // start age
+  user.projectionAge, // end age
+  ['Age', 'Year', 'Income'] // columns
+  );
+}
