@@ -739,8 +739,18 @@ function generateProjection(startAge, endAge, columns) {
   const tbody = document.createElement('tbody');
   for (let age = startAge; age <= endAge; age++) {
     let row = `<tr><td>${age}</td>`;
-    cell => row += `<td>${cell}</td>`
+    // Assuming 'year' is the current year + age - startAge
+    const year = new Date().getFullYear() + (age - startAge);
+    row += `<td>${year}</td>`;
+    // Assuming 'income' is a placeholder value, replace with actual income calculation
+    const income = 100000*((age - startAge)*user.raiseRate + 1); // Example income calculation
+    if (age < user.retirementAge){
+      row += `<td>${income}</td>`;
+    }
+    // Add more cells based on the number of columns
+    columns.slice(3).forEach(() => row += '<td>Data</td>'); // Placeholder for additional data
     row += '</tr>';
+    cell => row += `<td>${cell}</td>`
     tbody.innerHTML += row;
   }
   table.appendChild(tbody);
