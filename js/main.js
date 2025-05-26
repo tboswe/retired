@@ -1,20 +1,38 @@
 //Imports
 //import * as bootstrap from 'bootstrap'
 
-//user object
-const user = {
-  //present
+//Global Variables
+const indexationRate = 0.03;
+const inflationRate = 0.03;
+const investmentRate = 0.07;
+
+//Objects
+const person = {
   name: 'John Doe',
   age: 18,
-  //future
   retirementAge: 55,
   projectionAge: 100,
-  //rates
-  inflationRate: 0.03,
-  investmentRate: 0.07,
-  raiseRate: 0.05,
-  indexationRate: 0.03,
+  income: [],
+  savings: [],
+  pension: [],
+  asset: [],
+  dependant: []
 };
+
+const income = {
+}
+
+const savings = {
+}
+
+const pension = {
+}
+
+const asset = {
+}
+
+const dependant = {
+}
 
 //SAVE
 function saveUserData(element){
