@@ -6,45 +6,59 @@ const indexationRate = 0.03;
 const inflationRate = 0.03;
 const investmentRate = 0.07;
 
+//storage
+const persons = []; // Array to hold person objects
+
+
 //Objects
 const person = {
-  name: 'John Doe',
-  age: 18,
-  retirementAge: 55,
-  projectionAge: 100,
-  income: [],
+  name: String,
+  age: Number,
+  retirementAge: Number,
+  projectionAge: Number,
+  incomes: [],
   savings: [],
-  pension: [],
-  asset: [],
-  dependant: []
+  pensions: [],
+  assets: [],
+  debts: []
 };
 
 const income = {
+  type: String, // e.g., salary, bonus, RSU, net income
+  name: String, // e.g., company name
+  amount: Number, // e.g., 100000
+  frequency: String, // e.g., yearly, monthly, bi-monthly, bi-weekly
+  deductions: Number, // e.g., 200
+  deductionsFrequency: String, // e.g., yearly, monthly, bi-monthly, bi-weekly
+  fromRange: Number, // e.g., 2025
+  toRange: Number, //e.g. 2030
 }
 
 const savings = {
+  type: String, // e.g., cash, margin, RSP, spousal RSP, TFSA, LRSP, LIRA, RESP
+
 }
 
 const pension = {
+  type: String,
 }
 
 const asset = {
+  name: String,
+  value: Number
 }
 
-const dependant = {
+const debt = {
+  balance: Number,
+  payment: Number,
+  paymentFrequency: String,
+  lastPayment: Date
 }
 
 //SAVE
 function saveUserData(element){
-  //personal
-  person.name = document.getElementById('name-me').value;
-  person.age = parseInt(document.getElementById('current-age').value);
-  person.retirementAge = parseInt(document.getElementById('retirement-age').value);
-  person.projectionAge = parseInt(document.getElementById('projection-age').value);
 
 };
-
-//INIT
 
 //Persons
 function addPerson(){
@@ -53,19 +67,20 @@ function addPerson(){
   
     personRow.innerHTML = `
       <div class="col-lg-2">
-        <label for="account-type" class="form-label">Person Type</label>
-        <select class="form-select" id="person-type" placeholder="Choose" onChange="personChange(this)" required>
-          <option value="earner">Earner</option>
-          <option value="dependant">Dependant</option>
-        </select>
-      </div>
-      <div class="col-lg-2">
         <label for="account-name" class="form-label">Name</label>
         <input type="text" class="form-control" id="person-name" placeholder="Name" required>
       </div>
       <div class="col-lg-2">
         <label for="person-current-age" class="form-label">Current Age</label>
         <input type="number" class="form-control" id="person-current-age" min="0" step="100" placeholder="Current Age" required>
+      </div>
+      <div class="col-lg-2">
+        <label for="person-retirement-age" class="form-label">Retirement Age</label>
+        <input type="number" class="form-control" id="person-retirement-age" min="0" step="100" placeholder="Retirement Age" required>
+      </div>
+      <div class="col-lg-2">
+        <label for="person-projection-age" class="form-label">Projection Age</label>
+        <input type="number" class="form-control" id="person-projection-age" min="0" step="100" placeholder="Projection Age" required>
       </div>
       <div class="col-lg-1">
         <button type="button" class="btn btn-danger btn-sm remove-row">
@@ -82,95 +97,62 @@ function addPerson(){
     personRow.querySelector('.remove-row').addEventListener('click', () => {
       personRow.remove();
     });
-  }
-  /*
-  const justMeContainer = document.createElement('div');
-  justMeContainer.className = 'container py-5';
+}
 
-  justMeContainer.innerHTML = `
-    <form id="retirement-form">
-      <!-- Questionaire -->
-      <div class="row mb-3">
-        <div class="col-sm-12">
-          <h1 class="h4 mb-3">Personals</h1>
-        </div>
-      </div>
-      
-      <div class="row align-items-end mb-3" id="personals">
-        <div class="col-lg-2">
-          <label for="name-me" class="form-label">Name</label>
-          <input type="text" class="form-control" id="name-me" maxlength="20" pattern="[A-Za-z]+" title="Only letters are allowed, up to 20 characters" onChange="saveUserData()" required>
-        </div>
-        <div class="col-lg-1">
-          <label for="current-age" class="form-label">Current Age</label>
-          <input type="number" class="form-control" id="current-age" min="18" max="100" onChange="saveUserData(this)" required>
-        </div>
-        <div class="col-lg-1">
-          <label for="retirement-age" class="form-label">Retirement Age</label>
-          <input type="number" class="form-control" id="retirement-age" min="18" max="100" value="55" onChange="saveUserData(this)" required>
-        </div>
-        <div class="col-lg-1">
-          <label for="projection-age" class="form-label">Projection Age</label>
-          <input type="number" class="form-control" id="projection-age" min="18" max="100" value="100" onChange="saveUserData(this)" required>
-        </div>
-      </div>
-      <h1 class="h4 mb-3">Income</h1>
-      <div class="row align-items-end mb-3">
-        <div class="col-lg-1">
-          <button type="button" id="add-income-button" class="btn btn-primary btn-sm" onClick="addIncome()"><i class="bi bi-plus"></i> Add</button>
-        </div>
-        <div class="col-lg-1">
-          <button type="button" id="income-lock-button" class="btn btn-outline-secondary btn-sm" onClick="lockIncome()"><i class="bi bi-plus"></i> Lock</button>
-        </div>
-      </div>
-      <h1 class="h4 mb-3">Savings</h1>
-      <div class="row align-items-end mb-3">
-          <div class="col-lg-1">
-            <button type="button" id="add-savings-button" class="btn btn-primary btn-sm" onClick="addSavings()">
-              <i class="bi bi-plus"></i> Add
-            </button>
-          </div>
-          <div class="col-lg-1">
-            <button type="button" id="savings-lock-button" class="btn btn-outline-secondary btn-sm" onClick="lockSavings()">
-              <i class="bi bi-plus"></i> Lock
-            </button>
-          </div>
-        </div>
-        <h1 class="h4 mb-3">Pensions</h1>
-        <div class="row align-items-end mb-3">
-          <div class="col-lg-1">
-            <button type="button" id="add-pension-button" class="btn btn-primary btn-sm" onClick="addPension()">
-              <i class="bi bi-plus"></i> Add
-            </button>
-          </div>
-          <div class="col-lg-1">
-            <button type="button" id="pensions-lock-button" class="btn btn-outline-secondary btn-sm" onClick="lockPensions()">
-              <i class="bi bi-plus"></i> Lock
-            </button>
-          </div>
-        </div>
-        <h1 class="h4 mb-3">Assets</h1>
-        <div class="row align-items-end mb-3">
-          <div class="col-lg-1">
-            <button type="button" id="add-asset-button" class="btn btn-primary btn-sm" onClick="addAsset()">
-              <i class="bi bi-plus"></i> Add
-            </button>
-          </div>
-          <div class="col-lg-1">
-            <button type="button" id="assets-lock-button" class="btn btn-outline-secondary btn-sm" onClick="lockAssets()">
-              <i class="bi bi-plus"></i> Lock
-            </button>
-          </div>
-        </div>            
+function personChange(selectElement) {
+    const selectedValue = selectElement.value; // Get the selected dropdown value
+    const row = selectElement.closest('.row'); // Get the parent row of the dropdown
 
-    </form>
-  `;
+    // Clear the row's content except for the dropdown
+    row.innerHTML = `
+      <div class="col-lg-2">
+        <label for="person-type" class="form-label">Person Type</label>
+        <select class="form-select" id="person-type" onChange="personChange(this)" required>
+          <option value="earner" ${selectedValue === 'earner' ? 'selected' : ''}>Earner</option>
+          <option value="dependant" ${selectedValue === 'dependant' ? 'selected' : ''}>Dependant</option>
+        </select>
+      </div>
+    `;
   
-
-  document.body.appendChild(justMeContainer);
-}*/
-
-//Init me and my partner
+    // Add additional fields based on the selected value
+    if (selectedValue === 'earner') {
+      row.innerHTML += `
+        <div class="col-lg-2">
+          <label for="person-name" class="form-label">Name</label>
+          <input type="text" class="form-control" id="person-name" placeholder="Name" required>
+        </div>
+        <div class="col-lg-1">
+          <label for="person-age" class="form-label">Current Age</label>
+          <input type="number" class="form-control" id="person-age" min="0" step="100" placeholder="30" required>
+        </div>
+      `;
+    } else if (selectedValue === 'dependant') {
+      row.innerHTML += `
+        <div class="col-lg-2">
+          <label for="dependant-name" class="form-label">Name</label>
+          <input type="text" class="form-control" id="dependant-name" placeholder="Dependant Name" required>
+        </div>
+        <div class="col-lg-1">
+          <label for="dependant-current-age" class="form-label">Current Age</label>
+          <input type="number" class="form-control" id="dependant-current-age" min="0" max="100" value="7" step="1" onChange="saveUserData(this)" required>
+        </div>    
+      `;      
+    }
+  
+    // Add the remove button back to the row
+    row.innerHTML += `
+      <div class="col-lg-1">
+        <button type="button" class="btn btn-danger btn-sm remove-row">
+          <i class="bi bi-trash"></i> Remove
+        </button>
+      </div>
+    `;
+  
+    // Add event listener to the remove button
+    row.querySelector('.remove-row').addEventListener('click', () => {
+      row.remove();
+    });
+  }
 
 //Income Functions
 function addIncome() {
@@ -735,9 +717,76 @@ function pensionsChange(selectElement) {
     row.remove();
   });
 }
+
 //Asset Functions
+function addAsset(){
+    const assetRow = document.createElement('div');
+    assetRow.className = 'row align-items-end mb-3';
+  
+    assetRow.innerHTML = `
+      <div class="col-lg-2">
+        <label for="asset-name" class="form-label">Asset Name</label>
+        <input type="text" class="form-control" id="asset-name" placeholder="Name" required>
+      </div>
+      <div class="col-lg-2">
+        <label for="asset-value" class="form-label">Value</label>
+        <input type="number" class="form-control" id="asset-value" min="0" step="100" placeholder="100000" required>
+      </div>
+      <div class="col-lg-1">
+        <button type="button" class="btn btn-danger btn-sm remove-row">
+          <i class="bi bi-trash"></i> Remove
+        </button>
+      </div>
+    `;
+  
+    // Append the new row to the Savings section
+    const assetSection = document.querySelector('#add-asset-button').parentNode.parentNode;
+    assetSection.appendChild(assetRow);
+  
+    // Add event listener to the remove button
+    assetRow.querySelector('.remove-row').addEventListener('click', () => {
+      assetRow.remove();
+    });
+}
 
 //Debt Functions
+function addDebt(){
+    const debtRow = document.createElement('div');
+    debtRow.className = 'row align-items-end mb-3';
+  
+    debtRow.innerHTML = `
+      <div class="col-lg-2">
+        <label for="debt-name" class="form-label">Debt Name</label>
+        <input type="text" class="form-control" id="debt-name" placeholder="Name" required>
+      </div>
+      <div class="col-lg-2">
+        <label for="debt-balance" class="form-label">Balance</label>
+        <input type="number" class="form-control" id="debt-balance" min="0" step="100" placeholder="Balance" required>
+      </div>
+      <div class="col-lg-2">
+        <label for="debt-payment" class="form-label">Monthly Payment</label>
+        <input type="number" class="form-control" id="debt-payment" min="0" step="100" placeholder="Payment" required>
+      </div>
+      <div class="col-lg-2">
+        <label for="debt-last-payment" class="form-label ">Last Year of Payment</label>
+        <input type="date" class="form-control" id="debt-last-payment" placeholder="Last Payment" required>
+      </div>
+      <div class="col-lg-1">
+        <button type="button" class="btn btn-danger btn-sm remove-row">
+          <i class="bi bi-trash"></i> Remove
+        </button>
+      </div>
+    `;
+  
+    // Append the new row to the Savings section
+    const debtSection = document.querySelector('#add-person-button').parentNode.parentNode;
+    debtSection.appendChild(debtRow);
+  
+    // Add event listener to the remove button
+    debtRow.querySelector('.remove-row').addEventListener('click', () => {
+      debtRow.remove();
+    });
+}
 
 //Projection
 function generateProjection(startAge, endAge, columns) {

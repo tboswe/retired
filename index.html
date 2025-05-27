@@ -28,6 +28,9 @@
             <i class="bi bi-plus"></i> Add
           </button>
         </div>
+        <div class="col-lg-1">
+          <button type="button" id="income-lock-button" class="btn btn-outline-secondary btn-sm" onClick="lockIncome()"><i class="bi bi-plus"></i> Lock</button>
+        </div>
       </div>
       <h1 class="h4 mb-3">Income</h1>
       <div class="row align-items-end mb-3">
@@ -76,7 +79,20 @@
               <i class="bi bi-plus"></i> Lock
             </button>
           </div>
-        </div>            
+        </div>
+        <h1 class="h4 mb-3">Debts</h1>
+        <div class="row align-items-end mb-3">
+          <div class="col-lg-1">
+            <button type="button" id="add-debt-button" class="btn btn-primary btn-sm" onClick="addDebt()">
+              <i class="bi bi-plus"></i> Add
+            </button>
+          </div>
+          <div class="col-lg-1">
+            <button type="button" id="debt-lock-button" class="btn btn-outline-secondary btn-sm" onClick="lockDebts()">
+              <i class="bi bi-plus"></i> Lock
+            </button>
+          </div>
+        </div>             
       </div>
 </body>
 </html>
