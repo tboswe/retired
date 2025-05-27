@@ -37,24 +37,53 @@ const dependant = {
 //SAVE
 function saveUserData(element){
   //personal
-  user.name = document.getElementById('name-me').value;
-  user.age = parseInt(document.getElementById('current-age').value);
-  user.retirementAge = parseInt(document.getElementById('retirement-age').value);
-  user.projectionAge = parseInt(document.getElementById('projection-age').value);
+  person.name = document.getElementById('name-me').value;
+  person.age = parseInt(document.getElementById('current-age').value);
+  person.retirementAge = parseInt(document.getElementById('retirement-age').value);
+  person.projectionAge = parseInt(document.getElementById('projection-age').value);
 
 };
 
 //INIT
-//Questionaire
-function adultDropdownChange(element){
-  let dropdownButton = document.getElementById('adultDropdownMenuButton');
-  dropdownButton.textContent = element.textContent;
-  
-  justMeQuestions();
-};
 
-//Init Just Me
-function justMeQuestions(){
+//Persons
+function addPerson(){
+    const personRow = document.createElement('div');
+    personRow.className = 'row align-items-end mb-3';
+  
+    personRow.innerHTML = `
+      <div class="col-lg-2">
+        <label for="account-type" class="form-label">Person Type</label>
+        <select class="form-select" id="person-type" placeholder="Choose" onChange="personChange(this)" required>
+          <option value="earner">Earner</option>
+          <option value="dependant">Dependant</option>
+        </select>
+      </div>
+      <div class="col-lg-2">
+        <label for="account-name" class="form-label">Name</label>
+        <input type="text" class="form-control" id="person-name" placeholder="Name" required>
+      </div>
+      <div class="col-lg-2">
+        <label for="person-current-age" class="form-label">Current Age</label>
+        <input type="number" class="form-control" id="person-current-age" min="0" step="100" placeholder="Current Age" required>
+      </div>
+      <div class="col-lg-1">
+        <button type="button" class="btn btn-danger btn-sm remove-row">
+          <i class="bi bi-trash"></i> Remove
+        </button>
+      </div>
+    `;
+  
+    // Append the new row to the Savings section
+    const personSection = document.querySelector('#add-person-button').parentNode.parentNode;
+    personSection.appendChild(personRow);
+  
+    // Add event listener to the remove button
+    personRow.querySelector('.remove-row').addEventListener('click', () => {
+      personRow.remove();
+    });
+  }
+  /*
   const justMeContainer = document.createElement('div');
   justMeContainer.className = 'container py-5';
 
@@ -136,9 +165,10 @@ function justMeQuestions(){
 
     </form>
   `;
+  
 
   document.body.appendChild(justMeContainer);
-}
+}*/
 
 //Init me and my partner
 
@@ -743,8 +773,8 @@ function generateProjection(startAge, endAge, columns) {
     const year = new Date().getFullYear() + (age - startAge);
     row += `<td>${year}</td>`;
     // Assuming 'income' is a placeholder value, replace with actual income calculation
-    const income = 100000*((age - startAge)*user.raiseRate + 1); // Example income calculation
-    if (age < user.retirementAge){
+    const income = 100000*((age - startAge)*inflationRate + 1); // Example income calculation
+    if (age < person.retirementAge){
       row += `<td>${income}</td>`;
     }
     // Add more cells based on the number of columns
@@ -760,8 +790,8 @@ function generateProjection(startAge, endAge, columns) {
 
 function generate() {
   generateProjection(
-  user.age, // start age
-  user.projectionAge, // end age
+  person.age, // start age
+  person.projectionAge, // end age
   ['Age', 'Year', 'Income'] // columns
   );
 }

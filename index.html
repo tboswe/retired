@@ -16,28 +16,67 @@
   <div class="container py-5">
     <h1 class="text-center">Retired</h1>
     <p class="text-muted text-center">Estimate your retirement</p>
+    <div class="d-flex justify-content-center my-3">
+      <button class="btn btn-primary" id="generate" onclick="generate()">Generate</button>
+    </div>
   </div>
     <div class="container py-5">
-        <div class="row justify-content-left">
-          <div class="col-lg-2">
-            <form id="retirement-form">
-              <!-- Questionaire -->
-              <div class="dropdown">
-                <button class="btn btn-secondary dropdown-toggle" type="button" id="adultDropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                  Plan for?
-                </button>
-                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                  <li><a class="dropdown-item" href="#" onclick="adultDropdownChange(this)">Just me</a></li>
-                  <li><a class="dropdown-item" href="#" onclick="adultDropdownChange(this)">My partner and me</a></li>
-                </ul>
-              </div>
-            </form>
+      <h1 class="h4 mb-3">Persons</h1>
+      <div class="row justify-content-left">
+        <div class="col-lg-1">
+          <button type="button" id="add-person-button" class="btn btn-primary btn-sm" onClick="addPerson()">
+            <i class="bi bi-plus"></i> Add
+          </button>
+        </div>
+      </div>
+      <h1 class="h4 mb-3">Income</h1>
+      <div class="row align-items-end mb-3">
+        <div class="col-lg-1">
+          <button type="button" id="add-income-button" class="btn btn-primary btn-sm" onClick="addIncome()"><i class="bi bi-plus"></i> Add</button>
+        </div>
+        <div class="col-lg-1">
+          <button type="button" id="income-lock-button" class="btn btn-outline-secondary btn-sm" onClick="lockIncome()"><i class="bi bi-plus"></i> Lock</button>
+        </div>
+      </div>
+      <h1 class="h4 mb-3">Savings</h1>
+      <div class="row align-items-end mb-3">
+          <div class="col-lg-1">
+            <button type="button" id="add-savings-button" class="btn btn-primary btn-sm" onClick="addSavings()">
+              <i class="bi bi-plus"></i> Add
+            </button>
           </div>
           <div class="col-lg-1">
-            <button class="btn btn-primary" id="generate" onclick="generate()" disabled>Generate</button>
+            <button type="button" id="savings-lock-button" class="btn btn-outline-secondary btn-sm" onClick="lockSavings()">
+              <i class="bi bi-plus"></i> Lock
+            </button>
           </div>
         </div>
-    </div>  
-
+        <h1 class="h4 mb-3">Pensions</h1>
+        <div class="row align-items-end mb-3">
+          <div class="col-lg-1">
+            <button type="button" id="add-pension-button" class="btn btn-primary btn-sm" onClick="addPension()">
+              <i class="bi bi-plus"></i> Add
+            </button>
+          </div>
+          <div class="col-lg-1">
+            <button type="button" id="pensions-lock-button" class="btn btn-outline-secondary btn-sm" onClick="lockPensions()">
+              <i class="bi bi-plus"></i> Lock
+            </button>
+          </div>
+        </div>
+        <h1 class="h4 mb-3">Assets</h1>
+        <div class="row align-items-end mb-3">
+          <div class="col-lg-1">
+            <button type="button" id="add-asset-button" class="btn btn-primary btn-sm" onClick="addAsset()">
+              <i class="bi bi-plus"></i> Add
+            </button>
+          </div>
+          <div class="col-lg-1">
+            <button type="button" id="assets-lock-button" class="btn btn-outline-secondary btn-sm" onClick="lockAssets()">
+              <i class="bi bi-plus"></i> Lock
+            </button>
+          </div>
+        </div>            
+      </div>
 </body>
 </html>
