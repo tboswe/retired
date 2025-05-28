@@ -58,6 +58,16 @@ const debt = {
 //SAVE
 function saveUserData(element){
 
+  
+
+    for (const person of persons) {
+        // Check if the person object has a property with the same ID
+        if (person.hasOwnProperty(id)) {
+            person[id] = value; // Update the property with the new value
+            console.log(`Updated ${id} for ${person.name} to ${value}`);
+            return; // Exit the function once the property is found and updated
+        }
+    }
 };
 
 //Persons
@@ -68,19 +78,19 @@ function addPerson(){
     personRow.innerHTML = `
       <div class="col-lg-2">
         <label for="account-name" class="form-label">Name</label>
-        <input type="text" class="form-control" id="person-name" placeholder="Name" required>
+        <input type="text" class="form-control" id="person-name" placeholder="Name" onChange="saveUserData(this)" required>
       </div>
       <div class="col-lg-2">
         <label for="person-current-age" class="form-label">Current Age</label>
-        <input type="number" class="form-control" id="person-current-age" min="0" step="100" placeholder="Current Age" required>
+        <input type="number" class="form-control" id="person-current-age" min="0" step="100" placeholder="Current Age" onChange="saveUserData(this)" required>
       </div>
       <div class="col-lg-2">
         <label for="person-retirement-age" class="form-label">Retirement Age</label>
-        <input type="number" class="form-control" id="person-retirement-age" min="0" step="100" placeholder="Retirement Age" required>
+        <input type="number" class="form-control" id="person-retirement-age" min="0" step="100" placeholder="Retirement Age" onChange="saveUserData(this)" required>
       </div>
       <div class="col-lg-2">
         <label for="person-projection-age" class="form-label">Projection Age</label>
-        <input type="number" class="form-control" id="person-projection-age" min="0" step="100" placeholder="Projection Age" required>
+        <input type="number" class="form-control" id="person-projection-age" min="0" step="100" placeholder="Projection Age" onChange="saveUserData(this)" required>
       </div>
       <div class="col-lg-1">
         <button type="button" class="btn btn-danger btn-sm remove-row">
@@ -121,9 +131,17 @@ function personChange(selectElement) {
           <label for="person-name" class="form-label">Name</label>
           <input type="text" class="form-control" id="person-name" placeholder="Name" required>
         </div>
-        <div class="col-lg-1">
-          <label for="person-age" class="form-label">Current Age</label>
-          <input type="number" class="form-control" id="person-age" min="0" step="100" placeholder="30" required>
+        <div class="col-lg-2">
+          <label for="person-current-age" class="form-label">Current Age</label>
+          <input type="number" class="form-control" id="person-current-age" min="0" step="100" placeholder="Current Age" required>
+        </div>
+        <div class="col-lg-2">
+          <label for="person-retirement-age" class="form-label">Retirement Age</label>
+          <input type="number" class="form-control" id="person-retirement-age" min="0" step="100" placeholder="Retirement Age" required>
+        </div>
+        <div class="col-lg-2">
+          <label for="person-projection-age" class="form-label">Projection Age</label>
+          <input type="number" class="form-control" id="person-projection-age" min="0" step="100" placeholder="Projection Age" required>
         </div>
       `;
     } else if (selectedValue === 'dependant') {
@@ -135,7 +153,15 @@ function personChange(selectElement) {
         <div class="col-lg-1">
           <label for="dependant-current-age" class="form-label">Current Age</label>
           <input type="number" class="form-control" id="dependant-current-age" min="0" max="100" value="7" step="1" onChange="saveUserData(this)" required>
-        </div>    
+        </div>
+        <div class="col-lg-1">
+          <label for="dependant-independant-age" class="form-label">Independance Age</label>
+          <input type="number" class="form-control" id="dependant-independant-age" min="0" max="100" value="22" step="1" onChange="saveUserData(this)" required>
+        </div>
+        <div class="col-lg-2">
+          <label for="dependant-cost" class="form-label">Dependant Cost</label>
+          <input type="number" class="form-control" id="dependant-cost" min="0" max="50" step="1" placeholder="10" required>
+        </div>
       `;      
     }
   
@@ -148,6 +174,7 @@ function personChange(selectElement) {
       </div>
     `;
   
+
     // Add event listener to the remove button
     row.querySelector('.remove-row').addEventListener('click', () => {
       row.remove();
