@@ -57,15 +57,25 @@ const debt = {
 
 //SAVE
 function saveUserData(element){
-
-  
-
-    for (const person of persons) {
-        // Check if the person object has a property with the same ID
-        if (person.hasOwnProperty(id)) {
-            person[id] = value; // Update the property with the new value
-            console.log(`Updated ${id} for ${person.name} to ${value}`);
-            return; // Exit the function once the property is found and updated
+  console.log('called saveUserData with element:', element);
+    const personRow = element.closest('.row'); // Get the parent row of the input element
+    const index = personRow.dataset.personIndex; // Get the index of the person from the row's dataset
+console.log('the index is:', index)
+    // Update the corresponding person object in the persons array  
+    if (index !== undefined) {
+        const personData = persons[index]; 
+        if (element.id === 'person-name') {
+            personData.name = element.value;
+            console.log(`Person ${index} name updated to: ${personData.name}`);
+        } else if (element.id === 'person-current-age') {
+            personData.age = parseInt(element.value, 10);
+            console.log(`Person ${index} current age updated to: ${personData.age}`);
+        } else if (element.id === 'person-retirement-age') {
+            personData.retirementAge = parseInt(element.value, 10);
+            console.log(`Person ${index} retirement age updated to: ${personData.retirementAge}`);
+        } else if (element.id === 'person-projection-age') {
+            personData.projectionAge = parseInt(element.value, 10);
+            console.log(`Person ${index} projection age updated to: ${personData.projectionAge}`);
         }
     }
 };
@@ -77,7 +87,7 @@ function addPerson(){
   
     personRow.innerHTML = `
       <div class="col-lg-2">
-        <label for="account-name" class="form-label">Name</label>
+        <label for="person-name" class="form-label">Name</label>
         <input type="text" class="form-control" id="person-name" placeholder="Name" onChange="saveUserData(this)" required>
       </div>
       <div class="col-lg-2">
@@ -98,14 +108,32 @@ function addPerson(){
         </button>
       </div>
     `;
+
+    // Create a new person object and add it to the persons array
+    const newPerson = person;
+    newPerson.name = '';
+    newPerson.age = 0;
+    newPerson.retirementAge = 0;
+    newPerson.projectionAge = 0;
+
+    persons.push(newPerson);
+    personRow.dataset.personIndex = persons.length - 1; // Store the index of the person in the row
+
   
-    // Append the new row to the Savings section
+    // Append the new row to the Persons section
     const personSection = document.querySelector('#add-person-button').parentNode.parentNode;
     personSection.appendChild(personRow);
   
     // Add event listener to the remove button
     personRow.querySelector('.remove-row').addEventListener('click', () => {
+      persons.splice(personRow.dataset.personIndex,1) ; // remove the person from the persons array
       personRow.remove();
+
+        // Update the index for all rows after the removed one
+      const allRows = document.querySelectorAll('.row.align-items-end.mb-3');
+      allRows.forEach((row, idx) => {
+        row.dataset.personIndex = idx;
+      });
     });
 }
 
