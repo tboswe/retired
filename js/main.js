@@ -36,7 +36,6 @@ const income = {
 
 const savings = {
   type: String, // e.g., cash, margin, RSP, spousal RSP, TFSA, LRSP, LIRA, RESP
-
 }
 
 const pension = {
@@ -55,31 +54,6 @@ const debt = {
   lastPayment: Date
 }
 
-//SAVE
-function saveUserData(element){
-  console.log('called saveUserData with element:', element);
-    const personRow = element.closest('.row'); // Get the parent row of the input element
-    const index = personRow.dataset.personIndex; // Get the index of the person from the row's dataset
-console.log('the index is:', index)
-    // Update the corresponding person object in the persons array  
-    if (index !== undefined) {
-        const personData = persons[index]; 
-        if (element.id === 'person-name') {
-            personData.name = element.value;
-            console.log(`Person ${index} name updated to: ${personData.name}`);
-        } else if (element.id === 'person-current-age') {
-            personData.age = parseInt(element.value, 10);
-            console.log(`Person ${index} current age updated to: ${personData.age}`);
-        } else if (element.id === 'person-retirement-age') {
-            personData.retirementAge = parseInt(element.value, 10);
-            console.log(`Person ${index} retirement age updated to: ${personData.retirementAge}`);
-        } else if (element.id === 'person-projection-age') {
-            personData.projectionAge = parseInt(element.value, 10);
-            console.log(`Person ${index} projection age updated to: ${personData.projectionAge}`);
-        }
-    }
-};
-
 //Persons
 function addPerson(){
     const personRow = document.createElement('div');
@@ -88,19 +62,19 @@ function addPerson(){
     personRow.innerHTML = `
       <div class="col-lg-2">
         <label for="person-name" class="form-label">Name</label>
-        <input type="text" class="form-control" id="person-name" placeholder="Name" onChange="saveUserData(this)" required>
+        <input type="text" class="form-control" id="person-name" placeholder="Name" onChange="savePerson(this)" required>
       </div>
       <div class="col-lg-2">
         <label for="person-current-age" class="form-label">Current Age</label>
-        <input type="number" class="form-control" id="person-current-age" min="0" step="100" placeholder="Current Age" onChange="saveUserData(this)" required>
+        <input type="number" class="form-control" id="person-current-age" min="0" step="100" placeholder="Current Age" onChange="savePerson(this)" required>
       </div>
       <div class="col-lg-2">
         <label for="person-retirement-age" class="form-label">Retirement Age</label>
-        <input type="number" class="form-control" id="person-retirement-age" min="0" step="100" placeholder="Retirement Age" onChange="saveUserData(this)" required>
+        <input type="number" class="form-control" id="person-retirement-age" min="0" step="100" placeholder="Retirement Age" onChange="savePerson(this)" required>
       </div>
       <div class="col-lg-2">
         <label for="person-projection-age" class="form-label">Projection Age</label>
-        <input type="number" class="form-control" id="person-projection-age" min="0" step="100" placeholder="Projection Age" onChange="saveUserData(this)" required>
+        <input type="number" class="form-control" id="person-projection-age" min="0" step="100" placeholder="Projection Age" onChange="savePerson(this)" required>
       </div>
       <div class="col-lg-1">
         <button type="button" class="btn btn-danger btn-sm remove-row">
@@ -109,12 +83,14 @@ function addPerson(){
       </div>
     `;
 
+    
     // Create a new person object and add it to the persons array
-    const newPerson = person;
-    newPerson.name = '';
-    newPerson.age = 0;
-    newPerson.retirementAge = 0;
-    newPerson.projectionAge = 0;
+    const newPerson = {
+        name: '',
+        age: 0,
+        retirementAge: 0,
+        projectionAge: 0,
+    };
 
     persons.push(newPerson);
     personRow.dataset.personIndex = persons.length - 1; // Store the index of the person in the row
@@ -137,6 +113,31 @@ function addPerson(){
     });
 }
 
+function savePerson(element){
+
+    const personRow = element.closest('.row'); // Get the parent row of the input element
+    const index = personRow.dataset.personIndex; // Get the index of the person from the row's dataset
+
+    // Update the corresponding person object in the persons array  
+    if (index !== undefined) {
+        const personData = persons[index]; 
+        if (element.id === 'person-name') {
+            personData.name = element.value;
+            console.log(`Person ${index} name updated to: ${personData.name}`);
+        } else if (element.id === 'person-current-age') {
+            personData.age = parseInt(element.value, 10);
+            console.log(`Person ${index} current age updated to: ${personData.age}`);
+        } else if (element.id === 'person-retirement-age') {
+            personData.retirementAge = parseInt(element.value, 10);
+            console.log(`Person ${index} retirement age updated to: ${personData.retirementAge}`);
+        } else if (element.id === 'person-projection-age') {
+            personData.projectionAge = parseInt(element.value, 10);
+            console.log(`Person ${index} projection age updated to: ${personData.projectionAge}`);
+        }
+    }
+};
+
+/*personchange (no longer required)
 function personChange(selectElement) {
     const selectedValue = selectElement.value; // Get the selected dropdown value
     const row = selectElement.closest('.row'); // Get the parent row of the dropdown
@@ -207,14 +208,61 @@ function personChange(selectElement) {
     row.querySelector('.remove-row').addEventListener('click', () => {
       row.remove();
     });
-  }
+  }*/
 
 //Income Functions
 function addIncome() {
     const incomeRow = document.createElement('div');
     incomeRow.className = 'row align-items-end mb-3';
-  
+
+    // Build the person dropdown options
+    let personOptions = persons.map((p, idx) => 
+      `<option value="${idx}">${p.name || 'Person ' + (idx + 1)}</option>`
+    ).join('');
+
+
+incomeRow.innerHTML = `
+        <div class="col-lg-2">
+          <label for="income-person" class="form-label">Who's income?</label>
+          <select class="form-select" id="income-person" required>
+            <option value="">Select Person</option>
+            ${personOptions}
+          </select>
+        </div>
+        <div class="col-lg-1">
+          <button type="button" id="confirm-income" class="btn btn-primary btn-sm" onClick="addIncome()">
+            <i class="bi bi-plus"></i> Confirm
+          </button>
+        </div>
+        <div class="col-lg-1">
+          <button type="button" class="btn btn-danger btn-sm remove-row">
+            <i class="bi bi-trash"></i> Cancel
+          </button>
+        </div>
+    `;
+
+    /*
+    let personOptions = '';
+    for (let i = 0; i < persons.length; i++) {
+        if (persons[i].name === '') {
+            personOptions += `<option value="${i}">Person ${i + 1}</option>`;
+        } else {
+            personOptions += `<option value="${i}">${persons[i].name}</option>`;
+            console.log(`Person ${i} name: ${persons[i].name}`);
+        }
+    }*/
+
+    
+
+  /*
     incomeRow.innerHTML = `
+      <div class="col-lg-2">
+        <label for="income-person" class="form-label">Person</label>
+        <select class="form-select" id="income-person" onchange="linkIncometoPerson(this)" required>
+          <option value="">Select Person</option>
+          ${personOptions}
+        </select>
+      </div>    
       <div class="col-lg-2">
         <label for="income-type" class="form-label">Income Type</label>
         <select class="form-select" id="account-type" placeholder="Choose" onChange="incomeChange(this)" required>
@@ -229,24 +277,19 @@ function addIncome() {
           <input type="text" class="form-control" id="income-name" placeholder="Company Name" required>
         </div>
         <div class="col-lg-2">
-          <label for="income-amount" class="form-label">Amount</label>
+          <label for="income-amount" class="form-label">Yearly Amount</label>
           <input type="number" class="form-control" id="income-amount" min="0" step="100" placeholder="100000" required>
         </div>
-        <div class="col-lg-1">
-          <label for="income-frequency" class="form-label ">Frequency</label>
-          <select class="form-select" id="income-frequency" placeholder="Choose" onChange="incomeFrequencyChange(this)" required>
-            <option value="yearly">Yearly</option>
-            <option value="monthly">Monthly</option>
-            <option value="Bi-monthly">Bi-monthly</option>
-            <option value="Bi-weekly">Bi-weekly</option>
-          </select>
+        <div class="col-lg-2">
+          <label for="income-raise" class="form-label ">Yearly Raise</label>
+          <input type="number" class="form-control" id="income-raise" min="0" max="50" step="1" value="5">
         </div> 
       <div class="col-lg-1">
         <button type="button" class="btn btn-danger btn-sm remove-row">
           <i class="bi bi-trash"></i> Remove
         </button>
       </div>
-    `;
+    `;*/
   
     // Append the new row to the income section
     const incomeSection = document.querySelector('#add-income-button').parentNode.parentNode;
@@ -264,6 +307,13 @@ function addIncome() {
 
     // Clear the row's content except for the dropdown
     row.innerHTML = `
+      <div class="col-lg-2">
+        <label for="income-person" class="form-label">Person</label>
+        <select class="form-select" id="income-person" onchange="linkIncometoPerson(this)" required>
+          <option value="">Select Person</option>
+          ${personOptions}
+        </select>
+      </div>  
       <div class="col-lg-2">
         <label for="income-type" class="form-label">Income Type</label>
         <select class="form-select" id="income-type" onChange="incomeChange(this)" required>
@@ -400,6 +450,19 @@ function addIncome() {
       row.remove();
     });
   }
+
+function linkIncometoPerson(selectElement) {
+    const selectedIndex = selectElement.value; // Get the selected index of the person
+    const row = selectElement.closest('.row'); // Get the parent row of the dropdown
+
+    // Update the person object in the persons array with the selected index
+    if (selectedIndex !== '') {
+        const personData = persons[selectedIndex];
+        console.log(`Income linked to person: ${personData.name}`);
+    } else {
+        console.log('No person selected for income');
+    }
+}
 
 //Savings Functions
 function addSavings() {
@@ -872,10 +935,11 @@ function generateProjection(startAge, endAge, columns) {
   // Body
   const tbody = document.createElement('tbody');
   for (let age = startAge; age <= endAge; age++) {
-    let row = `<tr><td>${age}</td>`;
     // Assuming 'year' is the current year + age - startAge
     const year = new Date().getFullYear() + (age - startAge);
-    row += `<td>${year}</td>`;
+    let row = `<tr><td>${year}</td>`;
+    //age
+    row += `<td>${age}</td>`;
     // Assuming 'income' is a placeholder value, replace with actual income calculation
     const income = 100000*((age - startAge)*inflationRate + 1); // Example income calculation
     if (age < person.retirementAge){
@@ -896,6 +960,6 @@ function generate() {
   generateProjection(
   person.age, // start age
   person.projectionAge, // end age
-  ['Age', 'Year', 'Income'] // columns
+  ['Year','Age', 'Income'] // columns
   );
 }
