@@ -17,7 +17,7 @@
     <h1 class="text-center">Retired</h1>
     <p class="text-muted text-center">Estimate your retirement</p>
     <div class="d-flex justify-content-center my-3">
-      <button class="btn btn-primary" id="generate" onclick="generate()">Generate</button>
+      <button class="btn btn-primary" id="generate" onclick="generateProjection()">Generate</button>
     </div>
   </div>
     <div class="container py-5">
@@ -29,13 +29,13 @@
           </button>
         </div>
         <div class="col-lg-1">
-          <button type="button" id="income-lock-button" class="btn btn-outline-secondary btn-sm" onClick="lockIncome()"><i class="bi bi-plus"></i> Lock</button>
+          <button type="button" id="income-lock-button" class="btn btn-outline-secondary btn-sm" onClick="lockPerson()"><i class="bi bi-plus"></i> Lock</button>
         </div>
       </div>
       <h1 class="h4 mb-3">Income</h1>
       <div class="row align-items-end mb-3">
         <div class="col-lg-1">
-          <button type="button" id="add-income-button" class="btn btn-primary btn-sm" onClick="addIncome()"><i class="bi bi-plus"></i> Add</button>
+          <button type="button" id="add-income-button" class="btn btn-primary btn-sm" onClick="confirmIncome()"><i class="bi bi-plus"></i> Add</button>
         </div>
         <div class="col-lg-1">
           <button type="button" id="income-lock-button" class="btn btn-outline-secondary btn-sm" onClick="lockIncome()"><i class="bi bi-plus"></i> Lock</button>
@@ -44,7 +44,7 @@
       <h1 class="h4 mb-3">Savings</h1>
       <div class="row align-items-end mb-3">
           <div class="col-lg-1">
-            <button type="button" id="add-savings-button" class="btn btn-primary btn-sm" onClick="addSavings()">
+            <button type="button" id="add-savings-button" class="btn btn-primary btn-sm" onClick="confirmSavings()">
               <i class="bi bi-plus"></i> Add
             </button>
           </div>
@@ -57,7 +57,7 @@
         <h1 class="h4 mb-3">Pensions</h1>
         <div class="row align-items-end mb-3">
           <div class="col-lg-1">
-            <button type="button" id="add-pension-button" class="btn btn-primary btn-sm" onClick="addPension()">
+            <button type="button" id="add-pension-button" class="btn btn-primary btn-sm" onClick="confirmPension()">
               <i class="bi bi-plus"></i> Add
             </button>
           </div>
@@ -70,7 +70,7 @@
         <h1 class="h4 mb-3">Assets</h1>
         <div class="row align-items-end mb-3">
           <div class="col-lg-1">
-            <button type="button" id="add-asset-button" class="btn btn-primary btn-sm" onClick="addAsset()">
+            <button type="button" id="add-asset-button" class="btn btn-primary btn-sm" onClick="confirmAsset()">
               <i class="bi bi-plus"></i> Add
             </button>
           </div>
@@ -83,7 +83,7 @@
         <h1 class="h4 mb-3">Debts</h1>
         <div class="row align-items-end mb-3">
           <div class="col-lg-1">
-            <button type="button" id="add-debt-button" class="btn btn-primary btn-sm" onClick="addDebt()">
+            <button type="button" id="add-debt-button" class="btn btn-primary btn-sm" onClick="confirmDebt()">
               <i class="bi bi-plus"></i> Add
             </button>
           </div>
@@ -92,7 +92,20 @@
               <i class="bi bi-plus"></i> Lock
             </button>
           </div>
-        </div>             
+        </div>
+        <h1 class="h4 mb-3">Expenses</h1>
+        <div class="row align-items-end mb-3">
+          <div class="col-lg-1">
+            <button type="button" id="add-expense-button" class="btn btn-primary btn-sm" onClick="confirmExpense()">
+              <i class="bi bi-plus"></i> Add
+            </button>
+          </div>
+          <div class="col-lg-1">
+            <button type="button" id="expense-lock-button" class="btn btn-outline-secondary btn-sm" onClick="lockExpenses()">
+              <i class="bi bi-plus"></i> Lock
+            </button>
+          </div>
+        </div>                  
       </div>
 </body>
 </html>
