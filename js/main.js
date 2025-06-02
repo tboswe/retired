@@ -770,8 +770,26 @@ function addDebt(){
 //Expense Functions
 
 //Projection
-function generateProjection(startAge, endAge, columns) {
+function generateProjection() {
+  //for now I'll be generating the first person only
   // columns: array of column names
+  let columns = ['Year','Age'];
+  for(let i=0; i<persons[0].incomes.length; i++){
+    columns.push(`${persons[0].incomes[i].name} Income`);
+  }/*
+  for(let i=0; i<persons[0].pensions.length; i++){
+    columns.push(persons[0].pensions[i].name);
+  }
+  for(let i=0; i<persons[0].savings.length; i++){
+    columns.push(persons[0].savings[i].name);
+  }
+  for(let i=0; i<persons[0].assets.length; i++){
+    columns.push(persons[0].assets[i].name);
+  }
+  for(let i=0; i<persons[0].debts.length; i++){
+    columns.push(persons[0].debts[i].name);
+  }*/
+  columns.push('Yearly CoL','Savings Capacity');
 
   // Find or create the container
   let container = document.getElementById('table-container');
@@ -789,7 +807,7 @@ function generateProjection(startAge, endAge, columns) {
 
   // Header
   const thead = document.createElement('thead');
-  let headerRow = '';
+  let headerRow = `<h1>${persons[0].name}</h1>`;
   columns.forEach(col => headerRow += `<th>${col}</th>`);
   headerRow += '</tr>';
   thead.innerHTML = headerRow;
@@ -797,19 +815,20 @@ function generateProjection(startAge, endAge, columns) {
 
   // Body
   const tbody = document.createElement('tbody');
-  for (let age = startAge; age <= endAge; age++) {
+  let income = persons[0].incomes[0].amount
+  for (let age = persons[0].age; age <= persons[0].projectionAge; age++) {
     // Assuming 'year' is the current year + age - startAge
-    const year = new Date().getFullYear() + (age - startAge);
+    const year = new Date().getFullYear() + (age - persons[0].age);
     let row = `<tr><td>${year}</td>`;
     //age
     row += `<td>${age}</td>`;
     // Assuming 'income' is a placeholder value, replace with actual income calculation
-    const income = 100000*((age - startAge)*inflationRate + 1); // Example income calculation
-    if (age < person.retirementAge){
+    income += income*((persons[0].incomes[0].raise/100)+(persons[0].incomes[0].inflationAdjustment/100)); // Example income calculation
+    if (age < persons[0].retirementAge){
       row += `<td>${income}</td>`;
     }
     // Add more cells based on the number of columns
-    columns.slice(3).forEach(() => row += '<td>Data</td>'); // Placeholder for additional data
+    columns.slice(3).forEach(() => row += '<td></td>'); // Placeholder for additional data
     row += '</tr>';
     cell => row += `<td>${cell}</td>`
     tbody.innerHTML += row;
