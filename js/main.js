@@ -2,7 +2,8 @@
 //import * as bootstrap from 'bootstrap'
 
 //Global Variables
-let idCounter = 0;
+let personCounter = 0;
+let incomeCounter = 0;
 const indexationRate = 0.03;
 const inflationRate = 0.03;
 const investmentRate = 0.07;
@@ -112,13 +113,13 @@ function addPerson(){
     
     // Create a new person object and add it to the persons array
     const newPerson = {
-      id: idCounter,  
+      id: personCounter,  
       name: 'Johnny',
       age: 30,
       retirementAge: 55,
       projectionAge: 100,
     };
-    idCounter++; // Increment the ID counter for the next object
+    personCounter++; // Increment the ID counter for the next object
 
     persons.push(newPerson);
     personRow.dataset.personId = newPerson.id; // Store the index of the person in the row
@@ -242,14 +243,14 @@ function addIncome(element) {
     row = element.closest('.row'); // Get the parent row of the button
 
     const newIncome = {
-      id: idCounter, // Use the length of incomes array to set a unique ID
+      id: incomeCounter, // Use the length of incomes array to set a unique ID
       type: 'salary', // Default type, can be changed later
       name: '',
       amount: 100000,
       raise: 0.05, // Default raise rate
       inflationAdjustment: inflationRate // Default inflation adjustment
     };
-    idCounter++; // Increment the ID counter for the next object
+    incomeCounter++; // Increment the ID counter for the next object
     
     if (thisPerson.incomes) {
       // If the person already has incomes, push the new income object to their incomes array
@@ -293,6 +294,8 @@ function addIncome(element) {
       </div>
     `;
 
+    
+
     // Append the new row to the Income section
     const incomeSection = document.querySelector('#add-income-button').parentNode.parentNode;
     incomeSection.appendChild(row);
@@ -317,7 +320,7 @@ function saveIncome(selectElement) {
     incomeData.name = row.querySelector('#income-name').value;
     incomeData.amount = parseFloat(row.querySelector('#income-amount').value);
     incomeData.raise = parseFloat(row.querySelector('#income-raise').value);
-    incomeData.inflationAdjustment = parseFloat(row.querySelector('#income-inflation').value);
+    incomeData.inflationAdjustment = Number(parseFloat(row.querySelector('#income-inflation').value));
 }
 
 function removeIncome(person,income) {
@@ -811,70 +814,71 @@ function addDebt(){
 
 //Projection
 function generateProjection() {
-  //for now I'll be generating the first person only
-  // columns: array of column names
-  let columns = ['Year','Age'];
-  for(let i=0; i<persons[0].incomes.length; i++){
-    columns.push(`${persons[0].incomes[i].name} Income`);
-  }/*
-  for(let i=0; i<persons[0].pensions.length; i++){
-    columns.push(persons[0].pensions[i].name);
-  }
-  for(let i=0; i<persons[0].savings.length; i++){
-    columns.push(persons[0].savings[i].name);
-  }
-  for(let i=0; i<persons[0].assets.length; i++){
-    columns.push(persons[0].assets[i].name);
-  }
-  for(let i=0; i<persons[0].debts.length; i++){
-    columns.push(persons[0].debts[i].name);
-  }*/
-  //columns.push('Yearly CoL','Savings Capacity');
+  //person check
+  if(persons.length === 0){
+    alert("You must add a person to generate");
+    return
+  } else {
+    for(let i=0; i<persons.length; i++){//for each person
+        // Find or create the container
+      let container = document.getElementById('table-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'table-container';
+        container.className = 'table-responsive my-4';
+        document.body.appendChild(container);
+      }
+      container.innerHTML = '';
 
-  // Find or create the container
-  let container = document.getElementById('table-container');
-  if (!container) {
-    container = document.createElement('div');
-    container.id = 'table-container';
-    container.className = 'table-responsive my-4';
-    document.body.appendChild(container);
-  }
-  container.innerHTML = '';
+      // Create table
+      const table = document.createElement('table');
+      table.className = 'table table-striped table-bordered';
+      
+      //start with year and age
+      let columns = ['Year','Age'];
 
-  // Create table
-  const table = document.createElement('table');
-  table.className = 'table table-striped table-bordered';
+      //load incomes
+      if(persons[i].incomes === undefined){//if this person has no incomes
+        alert(`${persons[i].name} has no income`)
+      } else {
+        for(let j=0; j<persons[i].incomes.length; j++){
+          columns.push(`${persons[i].incomes[j].name} Income`);
+        }
+      }
 
-  // Header
-  const thead = document.createElement('thead');
-  let headerRow = `<h1>${persons[0].name}</h1>`;
-  columns.forEach(col => headerRow += `<th>${col}</th>`);
-  headerRow += '</tr>';
-  thead.innerHTML = headerRow;
-  table.appendChild(thead);
+      // Header
+      const thead = document.createElement('thead');
+      let headerRow = `<h1>${persons[i].name}</h1>`;
+      columns.forEach(col => headerRow += `<th>${col}</th>`);
+      headerRow += '</tr>';
+      thead.innerHTML = headerRow;
+      table.appendChild(thead);
 
-  // Body
-  const tbody = document.createElement('tbody');
-  let income = persons[0].incomes[0].amount
-  for (let age = persons[0].age; age <= persons[0].projectionAge; age++) {
-    // Assuming 'year' is the current year + age - startAge
-    const year = new Date().getFullYear() + (age - persons[0].age);
-    let row = `<tr><td>${year}</td>`;
-    //age
-    row += `<td>${age}</td>`;
-    // Assuming 'income' is a placeholder value, replace with actual income calculation
-    income += income*((persons[0].incomes[0].raise)+(persons[0].incomes[0].inflationAdjustment)); // Example income calculation
-    if (age < persons[0].retirementAge){
-      row += `<td>${Number(income.toFixed(0))}</td>`;
-    }
-    // Add more cells based on the number of columns
-    columns.slice(3).forEach(() => row += '<td></td>'); // Placeholder for additional data
-    row += '</tr>';
-    cell => row += `<td>${cell}</td>`
-    tbody.innerHTML += row;
-  }
-  table.appendChild(tbody);
+      // Body
+      const tbody = document.createElement('tbody');
+      let amount = persons[i].incomes[0].amount;//define the amount outside of the for loop in order to conserve the original amount in the person income array
+      for (let age = persons[i].age; age <= persons[i].projectionAge; age++) {
+        // Assuming 'year' is the current year + age - startAge
+        const year = new Date().getFullYear() + (age - persons[i].age);
+        let row = `<tr><td>${year}</td>`;
+        //age
+        row += `<td>${age}</td>`;
+        // Assuming 'income' is a placeholder value, replace with actual income calculation
+        amount += amount*persons[i].incomes[0].raise+amount*persons[i].incomes[0].inflationAdjustment; // Example income calculation
+        if (age < persons[i].retirementAge){
+          row += `<td>${Number(amount.toFixed(0))}</td>`;
+        }
+    
+        // Add more cells based on the number of columns
+        columns.slice(3).forEach(() => row += '<td></td>'); // Placeholder for additional data
+        row += '</tr>';
+        cell => row += `<td>${cell}</td>`
+        tbody.innerHTML += row;
+      }   
+      table.appendChild(tbody);
 
-  container.appendChild(table);
+      container.appendChild(table);
+    }//end for of each person
+  }//end else for person check
 }
 
