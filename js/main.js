@@ -140,16 +140,20 @@ function addPerson(){
       //allRows.forEach((row, idx) => {
         //row.dataset.personId = idx;});
     });
+
+    console.log(persons);
 }
 
 function savePerson(element){
 
     const personRow = element.closest('.row'); // Get the parent row of the input element
+    console.log(`Saving person data for row: ${personRow.dataset.personId}`);
     const personId = personRow.dataset.personId; // Get the id of the person from the row's dataset
 
     // Update the corresponding person object in the persons array  
-    if (index !== undefined) {
-        const person = persons.find(person => person.id == personId);; 
+    if (personId !== undefined) {
+        const person = persons.find(person => person.id == personId);
+        console.log(`we found ${person.name} with id ${person.id}`);
         if (element.id === 'person-name') {
             person.name = element.value;
             console.log(`${person.name}'s name updated to: ${person.name}`);
@@ -164,6 +168,8 @@ function savePerson(element){
             console.log(`${person.name}'s projection age updated to: ${person.projectionAge}`);
         }
     }
+
+    console.log(persons);
 };
 
 function removePerson(personId){
@@ -180,15 +186,17 @@ function removePerson(personId){
   }
 
   //personremoval
-  const personRow = document.querySelector(`.row.align-items-end.mb-3[data-person-index="${thisPerson.id}"]`);
+  const personRow = document.querySelector(`.row.align-items-end.mb-3[data-person-id="${thisPerson.id}"]`);
   console.log(`Person Row: ${personRow.dataset.personId}`);
   if (personRow) {
     personRow.remove(); // Remove the row from the DOM
     persons = persons.filter(person => person.id == thisPerson.id); // Remove the person from the persons array
-    console.log(`${person.name} removed.`);
+    console.log(`${thisPerson.name} removed.`);
   } else {
-    console.error(`${person.name} not found.`);
+    console.error(`${thisPerson.name} not found.`);
   }
+
+  console.log(persons);
 }
 
 //Income Functions
@@ -305,6 +313,8 @@ function addIncome(element) {
       removeIncome(thisPerson, newIncome);
       row.remove();
     });
+
+    console.log(persons);
   }
 
 function saveIncome(selectElement) {
@@ -321,6 +331,8 @@ function saveIncome(selectElement) {
     incomeData.amount = parseFloat(row.querySelector('#income-amount').value);
     incomeData.raise = parseFloat(row.querySelector('#income-raise').value);
     incomeData.inflationAdjustment = Number(parseFloat(row.querySelector('#income-inflation').value));
+
+    console.log(persons);
 }
 
 function removeIncome(person,income) {
@@ -346,8 +358,10 @@ function removeIncome(person,income) {
         console.log('No person selected for income removal');
     }
     //finish by removing the html row
-    const incomeRow = document.querySelector(`.row.align-items-end.mb-3[data-person-index="${income.id}"]`);
+    const incomeRow = document.querySelector(`.row.align-items-end.mb-3[data-income-id="${income.id}"]`);
     incomeRow.remove(); // Remove the income row
+
+    console.log(persons);
 }
 
 //Savings Functions
