@@ -118,6 +118,7 @@ function addPerson(){
       age: 30,
       retirementAge: 55,
       projectionAge: 100,
+      incomes: [],
     };
     personCounter++; // Increment the ID counter for the next object
 
@@ -190,8 +191,13 @@ function removePerson(personId){
   console.log(`Person Row: ${personRow.dataset.personId}`);
   if (personRow) {
     personRow.remove(); // Remove the row from the DOM
-    persons = persons.filter(person => person.id == thisPerson.id); // Remove the person from the persons array
-    console.log(`${thisPerson.name} removed.`);
+    let idx = persons.findIndex(person => person.id == thisPerson.id);
+    if (idx !== -1) {
+      persons.splice(idx, 1); // Remove the person from the persons array
+      console.log(`Removed ${thisPerson.name} from persons array.`);
+    } else {
+      console.error(`Person with ID ${thisPerson.id} not found in persons array.`);
+    }
   } else {
     console.error(`${thisPerson.name} not found.`);
   }
@@ -200,13 +206,13 @@ function removePerson(personId){
 }
 
 //Income Functions
-function confirmIncome() {
+function confirmIncome(element) {
     const incomeRow = document.createElement('div');
-    incomeRow.className = 'row align-items-end mb-3';
+    incomeRow.className = 'row align-items-end mb-3'; // Add a class for styling
 
     // Build the person dropdown options
-    let personOptions = persons.map((p, idx) => 
-      `<option value="${idx}">${p.name || 'Person ' + (idx + 1)}</option>`
+    let personOptions = persons.map((p, id) => 
+      `<option value="${id}">${p.name || 'Person ' + (id + 1)}</option>`
     ).join('');
 
 
@@ -236,19 +242,49 @@ function confirmIncome() {
 
     // Add event listener to the remove button
     incomeRow.querySelector('.remove-row').addEventListener('click', () => {
-      incomeRow.remove();
+      incomeRow.remove(); // Remove the income row
     });
 
   }
 
 function addIncome(element) {
+    // Get the parent row of the button
+    let row = element.closest('.row'); // Get the parent row of the button
+
     // Get the selected person index
-    const personSelect = document.querySelector('#income-person');
+    if (!row) {
+      console.error('Row element not found.');
+      return;
+    }
+    // Check if the row has the income-person select element
+    if (!row.querySelector('#income-person')) {
+      console.error('Income person select element not found in the row.');
+      return;
+    }
+    // Get the person select element
+    const personSelect = row.querySelector('#income-person'); // Get the person select element from the row
+    // Check if the person select element exists and has a selected index
+    if (!personSelect) {
+      console.error('Person select element not found.');
+      return;
+    }
+    if (personSelect.selectedIndex < 0) {
+      console.error('No person selected.');
+      return;
+    }
+    // Get the selected index of the person
     const selectedIndex = personSelect.value; // Get the selected index of the person
-
+    if (selectedIndex < 0 || selectedIndex >= persons.length) {
+      console.error(`Invalid person index: ${selectedIndex}`);
+      return;
+    }
+    // Get the selected person object
     const thisPerson = persons[selectedIndex]; // Get the selected person object
-
-    row = element.closest('.row'); // Get the parent row of the button
+    if (!thisPerson) {
+      console.error(`Person with index ${selectedIndex} not found.`);
+      return;
+    }
+    console.log(`Adding income for person: ${thisPerson.name} (ID: ${thisPerson.id})`);
 
     const newIncome = {
       id: incomeCounter, // Use the length of incomes array to set a unique ID
@@ -259,21 +295,21 @@ function addIncome(element) {
       inflationAdjustment: inflationRate // Default inflation adjustment
     };
     incomeCounter++; // Increment the ID counter for the next object
-    
-    if (thisPerson.incomes) {
-      // If the person already has incomes, push the new income object to their incomes array
-      thisPerson.incomes.push(newIncome); // Add the new income object to the selected person's incomes
-      thisPerson.incomes[thisPerson.incomes.length - 1].id = thisPerson.incomes.length - 1; // Set the ID to the index in the incomes array
-    } else {
-      thisPerson.incomes = [newIncome]; // Initialize the incomes array with the new income object
-      thisPerson.incomes[0].id = 0; // Set the ID to 0 for the first income object
+    if (!thisPerson.incomes) {
+      thisPerson.incomes = []; // Initialize incomes array if it doesn't exist
     }
+    console.log(`Creating new income with ID: ${newIncome.id} for person: ${thisPerson.name}`);
+    thisPerson.incomes.push(newIncome); // Add the new income object to the selected person's incomes
 
     //store the income id in the row
     row.dataset.incomeId = newIncome.id; // Store the income ID in the row's dataset
     //store the person id in the row
-    row.dataset.personId = selectedIndex; // Store the person ID in the row's dataset
+    row.dataset.personId = thisPerson.id; // Store the person ID in the row's dataset
+    console.log(`New income added for person: ${thisPerson.name} with ID: ${newIncome.id}`);
+
     //Clear the confirmation, add the income row
+    row.innerHTML = ''; // Clear the row's inner HTML before adding new content
+    // Build the income row HTML
     row.innerHTML = `  
         <div class="col-lg-1">
           <label for="income-person" class="form-label">Person</label>
@@ -302,527 +338,77 @@ function addIncome(element) {
       </div>
     `;
 
-    
-
     // Append the new row to the Income section
     const incomeSection = document.querySelector('#add-income-button').parentNode.parentNode;
     incomeSection.appendChild(row);
 
         // Add event listener to the remove button
     row.querySelector('.remove-row').addEventListener('click', () => {
-      removeIncome(thisPerson, newIncome);
-      row.remove();
+      removeIncome(row); // Call the removeIncome function with the row
+      //row.remove();
     });
 
     console.log(persons);
   }
 
-function saveIncome(selectElement) {
+function saveIncome(e) {
     // Get the parent row of the select element
-    const row = selectElement.closest('.row'); // Get the parent row of the dropdown
+    const row = e.closest('.row'); // Get the parent row of the dropdown
     const incomeId = row.dataset.incomeId; // Get the income ID from the row's dataset
     const personId = row.dataset.personId; // Get the person ID from the row's dataset
 
   
-    const thisPerson = persons[personId]; // Get the selected person object
-    const incomeData = thisPerson.incomes[incomeId]; // Get the income object from the selected person's incomes array
+    const thisPerson = persons.find(person => person.id == personId); // Get the selected person object
+    const incomeData = thisPerson.incomes.find(income => income.id == incomeId); // Get the income object from the selected person's incomes array
+    if (!incomeData) {
+        console.error(`Income with ID ${incomeId} not found for person ${thisPerson.name}`);
+        return;
+    }
+    console.log(`Saving income data for person: ${thisPerson.name}, income ID: ${incomeId}`);
+
+    
     // Update the income object with the new values
     incomeData.name = row.querySelector('#income-name').value;
     incomeData.amount = parseFloat(row.querySelector('#income-amount').value);
     incomeData.raise = parseFloat(row.querySelector('#income-raise').value);
-    incomeData.inflationAdjustment = Number(parseFloat(row.querySelector('#income-inflation').value));
+    incomeData.inflationAdjustment = parseFloat(row.querySelector('#income-inflation').value);
 
     console.log(persons);
 }
 
-function removeIncome(person,income) {
-    // Get the parent row of the select element
-    //const row = buttonElement.closest('.row'); // Get the parent row of the button
-    //const incomeId = row.dataset.incomeId; // Get the income ID from the row's dataset
-
-    // Get the selected person index
-    //const personSelect = document.querySelector('#income-person');
-    //const selectedPersonIndex = personSelect.value; // Get the selected index of the person
-    //const thisPerson = persons[selectedPersonIndex]; // Get the selected person object
-
-    // Remove the income from the selected person's incomes array
-    if (person.incomes && person.incomes.length > income.id) {
-        person.incomes.splice(income.id, 1); // Remove the income object from the selected person's incomes array
-    } else {
-        console.error(`Income with ID ${income.id} not found for person ${person.name}`);
-    }
-    // Log the removal of the income
+function removeIncome(e) { 
+    row = e; // Get the row element from the event
+    const incomeId = row.dataset.incomeId; // Get the income ID from the row's dataset
+    const personId = row.dataset.personId; // Get the person ID from the row's dataset
+    const person = persons.find(p => p.id == personId); // Get the selected person object
     if (!person) {
-        console.log(`Income removed from person: ${person.name}`);
-    } else {
-        console.log('No person selected for income removal');
+        console.error(`Person with ID ${personId} not found.`);
+        return;
     }
-    //finish by removing the html row
-    const incomeRow = document.querySelector(`.row.align-items-end.mb-3[data-income-id="${income.id}"]`);
-    incomeRow.remove(); // Remove the income row
+    console.log(`Removing income with ID: ${incomeId} for person: ${person.name}`);
+    // Find the income object in the selected person's incomes array
+    const income = person.incomes.find(i => i.id == incomeId); // Get the income object from the selected person's incomes array
+    if (!income) {
+        console.error(`Income with ID ${incomeId} not found for person ${person.name}`);
+        return;
+    }
+    // Remove the income object from the selected person's incomes array
+    const incomeIndex = person.incomes.indexOf(income); // Get the index of the income object in the selected person's incomes array
+    if (incomeIndex > -1) {
+        person.incomes.splice(incomeIndex, 1); // Remove the income object from the selected person's incomes array
+        console.log(`Removed income with ID: ${incomeId} for person: ${person.name}`);
+    } else {
+        console.error(`Income with ID ${incomeId} not found in person's incomes array.`);
+    }
+    // Remove the row from the DOM
+    row.remove(); // Remove the row from the DOM
 
     console.log(persons);
 }
 
 //Savings Functions
-/*
-function addSavings() {
-    const savingsRow = document.createElement('div');
-    savingsRow.className = 'row align-items-end mb-3';
-  
-    savingsRow.innerHTML = `
-      <div class="col-lg-2">
-        <label for="account-type" class="form-label">Account Type</label>
-        <select class="form-select" id="account-type" placeholder="Choose" onChange="savingsChange(this)" required>
-          <option value="cash">Cash</option>
-          <option value="margin">Margin</option>
-          <option value="rsp">RSP</option>
-          <option value="srsp">Spousal RSP</option>
-          <option value="mrsp">RSP Match</option>
-          <option value="tfsa">TFSA</option>
-          <option value="lrsp">LRSP</option>
-          <option value="lira">LIRA</option>
-          <option value="resp">RESP</option>
-        </select>
-      </div>
-        <div class="col-lg-2">
-          <label for="account-name" class="form-label">Account Name</label>
-          <input type="text" class="form-control" id="account-name" placeholder="Account Nickname" required>
-        </div>
-        <div class="col-lg-2">
-          <label for="account-balance" class="form-label">Balance</label>
-          <input type="number" class="form-control" id="account-balance" min="0" step="100" placeholder="Enter balance" required>
-        </div>
-        <div class="col-lg-1">
-          <label for="investment-rate" class="form-label ">Return Rate</label>
-          <input type="number" class="form-control" id="investment-rate" min="0" max="100" value="7" step="1" onChange="saveUserData(this)" required>
-        </div> 
-      <div class="col-lg-1">
-        <button type="button" class="btn btn-danger btn-sm remove-row">
-          <i class="bi bi-trash"></i> Remove
-        </button>
-      </div>
-    `;
-  
-    // Append the new row to the Savings section
-    const savingsSection = document.querySelector('#add-savings-button').parentNode.parentNode;
-    savingsSection.appendChild(savingsRow);
-  
-    // Add event listener to the remove button
-    savingsRow.querySelector('.remove-row').addEventListener('click', () => {
-      savingsRow.remove();
-    });
-  }
-
-function confirmSavings() {
-}
-
-function saveSavings(){
-
-}
-
-function removeSavings(){
-}
-
-function savingsChange(selectElement) {
-    const selectedValue = selectElement.value; // Get the selected dropdown value
-    const row = selectElement.closest('.row'); // Get the parent row of the dropdown
-  
-    // Clear the row's content except for the dropdown
-    row.innerHTML = `
-      <div class="col-lg-2">
-        <label for="account-type" class="form-label">Account Type</label>
-        <select class="form-select" id="account-type" onChange="savingsChange(this)" required>
-          <option value="cash" ${selectedValue === 'cash' ? 'selected' : ''}>Cash</option>
-          <option value="margin" ${selectedValue === 'margin' ? 'selected' : ''}>Margin</option>
-          <option value="rsp" ${selectedValue === 'rsp' ? 'selected' : ''}>RSP</option>
-          <option value="srsp" ${selectedValue === 'srsp' ? 'selected' : ''}>Spousal RSP</option>
-          <option value="tfsa" ${selectedValue === 'tfsa' ? 'selected' : ''}>TFSA</option>
-          <option value="lrsp" ${selectedValue === 'lrsp' ? 'selected' : ''}>LRSP</option>
-          <option value="lira" ${selectedValue === 'lira' ? 'selected' : ''}>LIRA</option>
-          <option value="resp" ${selectedValue === 'resp' ? 'selected' : ''}>RESP</option>
-        </select>
-      </div>
-    `;
-  
-    // Add additional fields based on the selected value
-    if (selectedValue === 'cash' || selectedValue === 'margin') {
-      row.innerHTML += `
-        <div class="col-lg-2">
-          <label for="account-name" class="form-label">Account Name</label>
-          <input type="text" class="form-control" id="account-name" placeholder="Account Nickname" required>
-        </div>
-        <div class="col-lg-2">
-          <label for="account-balance" class="form-label">Balance</label>
-          <input type="number" class="form-control" id="account-balance" min="0" step="100" placeholder="Enter balance" required>
-        </div>
-        <div class="col-lg-1">
-          <label for="investment-rate" class="form-label ">Return Rate</label>
-          <input type="number" class="form-control" id="investment-rate" min="0" max="100" value="7" step="1" onChange="saveUserData(this)" required>
-        </div> 
-
-      `;
-    } else if (selectedValue === 'rsp') {
-      row.innerHTML += `
-        <div class="col-lg-2">
-          <label for="account-name" class="form-label">Account Name</label>
-          <input type="text" class="form-control" id="account-name" placeholder="Account Nickname" required>
-        </div>
-        <div class="col-lg-2">
-          <label for="annuitant" class="form-label">Annuitant</label>
-          <input type="text" class="form-control" id="annuitant" placeholder="Who receives" required>
-        </div>
-        <div class="col-lg-2">      
-          <label for="account-balance" class="form-label">Balance</label>
-          <input type="number" class="form-control" id="account-balance" min="0" step="100" placeholder="Enter balance" required>
-        </div>
-        <div class="col-lg-1">
-          <label for="investment-rate" class="form-label">Return Rate</label>
-          <input type="number" class="form-control" id="investment-rate" min="0" max="100" value="7" step="1" onChange="saveUserData(this)" required>
-        </div>
-      `;      
-    } else if (selectedValue === 'srsp'){
-      row.innerHTML += `
-      <div class="col-lg-2">
-        <label for="account-name" class="form-label">Account Name</label>
-        <input type="text" class="form-control" id="account-name" placeholder="Account Nickname" required>
-      </div>
-      <div class="col-lg-2">
-        <label for="contributor" class="form-label">Contributor</label>
-        <input type="text" class="form-control" id="contributor" placeholder="Who contributes" required>
-      </div>
-      <div class="col-lg-2">
-        <label for="annuitant" class="form-label">Annuitant</label>
-        <input type="text" class="form-control" id="annuitant" placeholder="Who receives" required>
-      </div>          
-      <div class="col-lg-2">
-        <label for="account-balance" class="form-label">Balance</label>
-        <input type="number" class="form-control" id="account-balance" min="0" step="100" placeholder="Enter balance" required>
-      </div>
-      <div class="col-lg-1">
-          <label for="investment-rate" class="form-label ">Return Rate</label>
-          <input type="number" class="form-control" id="investment-rate" min="0" max="100" value="7" step="1" onChange="saveUserData(this)" required>
-      </div>
-      `;
-    } else if (selectedValue === 'mrsp') {
-      row.innerHTML += `
-        <div class="col-lg-2">
-          <label for="account-name" class="form-label">Account Name</label>
-          <input type="text" class="form-control" id="account-name" placeholder="Account Nickname" required>
-        </div>
-        <div class="col-lg-2">
-          <label for="annuitant" class="form-label">Annuitant</label>
-          <input type="text" class="form-control" id="annuitant" placeholder="Who receives" required>
-        </div>   
-        <div class="col-lg-2">
-          <label for="account-balance" class="form-label">Balance</label>
-          <input type="number" class="form-control" id="account-balance" min="0" step="100" placeholder="Enter balance" required>
-        </div>
-        <div class="col-lg-1">
-          <label for="match-rate" class="form-label ">Match Rate</label>
-          <input type="number" class="form-control" id="match-rate" min="0" max="100" value="4" step="1" onChange="saveUserData(this)" required>
-        </div>
-        <div class="col-lg-1">
-          <label for="investment-rate" class="form-label ">Return Rate</label>
-          <input type="number" class="form-control" id="investment-rate" min="0" max="100" value="7" step="1" onChange="saveUserData(this)" required>
-        </div> 
-      `;
-    } else if (selectedValue === 'resp') {
-      row.innerHTML += `
-        <div class="col-lg-2">
-          <label for="account-name" class="form-label">Account Name</label>
-          <input type="text" class="form-control" id="account-name" placeholder="Account Nickname" required>
-        </div>      
-        <div class="col-lg-2">
-          <label for="account-balance" class="form-label">Balance</label>
-          <input type="number" class="form-control" id="account-balance" min="0" step="100" placeholder="Enter balance" required>
-        </div>
-        <div class="col-lg-1">
-          <label for="investment-rate" class="form-label ">Return Rate</label>
-          <input type="number" class="form-control" id="investment-rate" min="0" max="100" value="7" step="1" onChange="saveUserData(this)" required>
-        </div>
-        <div class="col-lg-2">
-          <label for="yearly-contribution" class="form-label">Yearly Contribution</label>
-          <input type="number" class="form-control" id="yearly-contribution" min="0" step="100" placeholder="Enter yearly contribution" required>
-        </div>
-        <div class="col-lg-1">
-          <label for="resp-contributions-end" class="form-label">Last Contribution Year</label>
-          <input type="number" class="form-control" id="resp-contributions-end" placeholder="Enter year of last contribution" required>
-        </div>
-      `;
-    } else if (selectedValue === 'tfsa') {
-      row.innerHTML += `
-        <div class="col-lg-2">
-          <label for="account-name" class="form-label">Account Name</label>
-          <input type="text" class="form-control" id="account-name" placeholder="Account Nickname" required>
-        </div>
-        <div class="col-lg-2">
-          <label for="annuitant" class="form-label">Annuitant</label>
-          <input type="text" class="form-control" id="annuitant" placeholder="Who receives" required>
-        </div>
-        <div class="col-lg-2">      
-          <label for="account-balance" class="form-label">Balance</label>
-          <input type="number" class="form-control" id="account-balance" min="0" step="100" placeholder="Enter balance" required>
-        </div>
-        <div class="col-lg-1">
-          <label for="investment-rate" class="form-label">Return Rate</label>
-          <input type="number" class="form-control" id="investment-rate" min="0" max="100" value="7" step="1" onChange="saveUserData(this)" required>
-        </div>
-      `;   
-    } else if (selectedValue === 'lrsp' || selectedValue === 'lira'){ 
-      //similar to rsp but will link to an LIF and a year of LIF start
-      row.innerHTML += `
-        <div class="col-lg-2">
-          <label for="account-name" class="form-label">Account Name</label>
-          <input type="text" class="form-control" id="account-name" placeholder="Account Nickname" required>
-        </div>
-        <div class="col-lg-2">
-          <label for="annuitant" class="form-label">Annuitant</label>
-          <input type="text" class="form-control" id="annuitant" placeholder="Who receives" required>
-        </div>
-        <div class="col-lg-2">
-          <label for="linked-lif" class="form-label">Associated LIF</label>
-          <input type="text" class="form-control" id="linked-lif" placeholder="Linked LIF" required>
-        </div>
-        <div class="col-lg-2">      
-          <label for="account-balance" class="form-label">Balance</label>
-          <input type="number" class="form-control" id="account-balance" min="0" step="100" placeholder="Enter balance" required>
-        </div>
-        <div class="col-lg-1">
-          <label for="investment-rate" class="form-label">Return Rate</label>
-          <input type="number" class="form-control" id="investment-rate" min="0" max="100" value="7" step="1" onChange="saveUserData(this)" required>
-        </div>
-      `;       
-    }
-  
-    // Add the remove button back to the row
-    row.innerHTML += `
-      <div class="col-lg-1">
-        <button type="button" class="btn btn-danger btn-sm remove-row">
-          <i class="bi bi-trash"></i> Remove
-        </button>
-      </div>
-    `;
-  
-    // Add event listener to the remove button
-    row.querySelector('.remove-row').addEventListener('click', () => {
-      row.remove();
-    });
-  }
-*/
 
 //Pension Functions
-/*
-function addPension() {
-  const pensionsRow = document.createElement('div');
-  pensionsRow.className = 'row align-items-end mb-3';
-
-  pensionsRow.innerHTML = `
-    <div class="col-lg-2">
-      <label for="pension-type" class="form-label">Pension Type</label>
-      <select class="form-select" id="pension-type" onChange="pensionsChange(this)" required>
-        <option value="defined-benefit">Defined Benefit</option>
-        <option value="defined-contribution">Defined Contribution</option>
-        <option value="lif">LIF</option>
-      </select>
-    </div>
-    <div class="col-lg-2">
-      <label for="pension-name" class="form-label">Pension Name</label>
-      <input type="text" class="form-control" id="pension-name" placeholder="Pension Name" required>
-    </div>
-    <div class="col-lg-2">
-      <label for="pension-balance" class="form-label">Bala nce</label>
-      <input type="number" class="form-control" id="pension-balance" min="0" step="100" placeholder="Enter balance" required>
-    </div>
-    <div class="col-lg-1">
-      <label for="return-rate" class="form-label ">Return Rate</label>
-      <input type="number" class="form-control" id="investment-rate" min="0" max="100" value="4" step="1" onChange="saveUserData(this)" required>
-    </div>
-    <div class="col-lg-1">
-      <label for="pension-mode" class="form-label">Pension Mode</label>
-        <select class="form-select" id="pension-mode" onChange="xxx(this)" required>
-          <option value="cash">Best 5</option>
-        </select>
-    </div> 
-    <div class="col-lg-1">
-      <button type="button" class="btn btn-danger btn-sm remove-row">
-        <i class="bi bi-trash"></i> Remove
-      </button>
-    </div>
-  `;
-
-    // Append the new row to the Pension section
-    const pensionsSection = document.querySelector('#add-pension-button').parentNode.parentNode;
-    pensionsSection.appendChild(pensionsRow);
-
-  // Add event listener to the remove button
-  pensionsRow.querySelector('.remove-row').addEventListener('click', () => {
-    pensionsRow.remove();
-  });
-}
-
-function pensionsChange(selectElement) {
-  const selectedValue = selectElement.value; // Get the selected dropdown value
-  const row = selectElement.closest('.row'); // Get the parent row of the dropdown
-
-  // Clear the row's content except for the dropdown
-  row.innerHTML = `
-    <div class="col-lg-2">
-      <label for="pension-type" class="form-label">Pension Type</label>
-      <select class="form-select" id="pension-type" onChange="pensionsChange(this)" required>
-        <option value="defined-benefit" ${selectedValue === 'defined-benefit' ? 'selected' : ''}>Defined Benefit</option>
-        <option value="defined-contribution" ${selectedValue === 'defined-contribution' ? 'selected' : ''}>Defined Contribution</option>
-        <option value="lif" ${selectedValue === 'lif' ? 'selected' : ''}>LIF</option>
-      </select>
-    </div>
-  `;
-
-  if (selectedValue === 'defined-benefit') {
-    row.innerHTML += `
-      <div class="col-lg-2">
-        <label for="pension-name" class="form-label">Pension Name</label>
-        <input type="text" class="form-control" id="pension-name" placeholder="Pension Name" required>
-      </div>
-      <div class="col-lg-2">
-        <label for="pension-balance" class="form-label">Balance</label>
-        <input type="number" class="form-control" id="pension-balance" min="0" step="100" placeholder="Enter balance" required>
-      </div>
-      <div class="col-lg-1">
-        <label for="return-rate" class="form-label ">Return Rate</label>
-        <input type="number" class="form-control" id="investment-rate" min="0" max="100" value="4" step="1" onChange="saveUserData(this)" required>
-      </div>
-      <div class="col-lg-1">
-        <label for="pension-mode" class="form-label">Pension Mode</label>
-        <select class="form-select" id="pension-mode" onChange="xxx(this)" required>
-          <option value="cash">Best 5</option>
-        </select>
-      </div>
-    `;
-  } else if (selectedValue === 'defined-contribution') {
-    row.innerHTML += `
-      <div class="col-lg-2">
-        <label for="pension-name" class="form-label">Pension Name</label>
-        <input type="text" class="form-control" id="pension-name" placeholder="Pension Name" required>
-      </div>
-      <div class="col-lg-2">
-        <label for="pension-balance" class="form-label">Balance</label>
-        <input type="number" class="form-control" id="pension-balance" min="0" step="100" placeholder="Enter balance" required>
-      </div>
-      <div class="col-lg-1">
-        <label for="return-rate" class="form-label ">Return Rate</label>
-        <input type="number" class="form-control" id="investment-rate" min="0" max="100" value="4" step="1" onChange="saveUserData(this)" required>
-      </div>
-      `;
-  } else if (selectedValue === 'lif') {
-    row.innerHTML += `
-      <div class="col-lg-2">
-        <label for="pension-name" class="form-label">Pension Name</label>
-        <input type="text" class="form-control" id="pension-name" placeholder="Pension Name" required>
-      </div>
-      <div class="col-lg-2">
-        <label for="pension-balance" class="form-label">Balance</label>
-        <input type="number" class="form-control" id="pension-balance" min="0" step="100" placeholder="Enter balance" required>
-      </div>
-      <div class="col-lg-1">
-        <label for="return-rate" class="form-label ">Return Rate</label>
-        <input type="number" class="form-control" id="investment-rate" min="0" max="100" value="4" step="1" onChange="saveUserData(this)" required>
-      </div>
-      <div class="col-lg-1">
-        <label for="lif-start" class="form-label">LIF Start Year</label>
-        <input type="number" class="form-control" id="lif-start" min="0" step="1" placeholder="Enter year of LIF start" required>
-      </div>
-      `;
-  };
-
-  // Add the remove button back to the row
-  row.innerHTML += `
-      <div class="col-lg-1">
-        <button type="button" class="btn btn-danger btn-sm remove-row">
-          <i class="bi bi-trash"></i> Remove
-        </button>
-      </div>
-    `;
-
-  // Add event listener to the remove button
-  row.querySelector('.remove-row').addEventListener('click', () => {
-    row.remove();
-  });
-}
-*/
-
-//Asset Functions
-/*
-function addAsset(){
-    const assetRow = document.createElement('div');
-    assetRow.className = 'row align-items-end mb-3';
-  
-    assetRow.innerHTML = `
-      <div class="col-lg-2">
-        <label for="asset-name" class="form-label">Asset Name</label>
-        <input type="text" class="form-control" id="asset-name" placeholder="Name" required>
-      </div>
-      <div class="col-lg-2">
-        <label for="asset-value" class="form-label">Value</label>
-        <input type="number" class="form-control" id="asset-value" min="0" step="100" placeholder="100000" required>
-      </div>
-      <div class="col-lg-1">
-        <button type="button" class="btn btn-danger btn-sm remove-row">
-          <i class="bi bi-trash"></i> Remove
-        </button>
-      </div>
-    `;
-  
-    // Append the new row to the Savings section
-    const assetSection = document.querySelector('#add-asset-button').parentNode.parentNode;
-    assetSection.appendChild(assetRow);
-  
-    // Add event listener to the remove button
-    assetRow.querySelector('.remove-row').addEventListener('click', () => {
-      assetRow.remove();
-    });
-}
-*/
-
-//Debt Functions
-/*
-function addDebt(){
-    const debtRow = document.createElement('div');
-    debtRow.className = 'row align-items-end mb-3';
-  
-    debtRow.innerHTML = `
-      <div class="col-lg-2">
-        <label for="debt-name" class="form-label">Debt Name</label>
-        <input type="text" class="form-control" id="debt-name" placeholder="Name" required>
-      </div>
-      <div class="col-lg-2">
-        <label for="debt-balance" class="form-label">Balance</label>
-        <input type="number" class="form-control" id="debt-balance" min="0" step="100" placeholder="Balance" required>
-      </div>
-      <div class="col-lg-2">
-        <label for="debt-payment" class="form-label">Monthly Payment</label>
-        <input type="number" class="form-control" id="debt-payment" min="0" step="100" placeholder="Payment" required>
-      </div>
-      <div class="col-lg-2">
-        <label for="debt-last-payment" class="form-label ">Last Year of Payment</label>
-        <input type="date" class="form-control" id="debt-last-payment" placeholder="Last Payment" required>
-      </div>
-      <div class="col-lg-1">
-        <button type="button" class="btn btn-danger btn-sm remove-row">
-          <i class="bi bi-trash"></i> Remove
-        </button>
-      </div>
-    `;
-  
-    // Append the new row to the Savings section
-    const debtSection = document.querySelector('#add-person-button').parentNode.parentNode;
-    debtSection.appendChild(debtRow);
-  
-    // Add event listener to the remove button
-    debtRow.querySelector('.remove-row').addEventListener('click', () => {
-      debtRow.remove();
-    });
-}
-*/
 
 //Expense Functions
 
