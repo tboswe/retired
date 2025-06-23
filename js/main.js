@@ -471,15 +471,16 @@ function generateProjection() {
         let row = `<tr><td>${year}</td>`;
         row += `<td>${age}</td>`;
 
-        let totalIncome = 0;
+        //let totalIncome = 0;
         if (age < persons[i].retirementAge) {
           // Sum all incomes for this year
           for (let j = 0; j < persons[i].incomes.length; j++) {
-            totalIncome += incomeAmounts[j];
+            //totalIncome += incomeAmounts[j];
             // Update the amount for next year
             incomeAmounts[j] += incomeAmounts[j] * persons[i].incomes[j].raise + incomeAmounts[j] * persons[i].incomes[j].inflationAdjustment;
+          
+            row += `<td>${incomeAmounts[j].toFixed(0)}</td>`;
           }
-          row += `<td>${Number(totalIncome.toFixed(0))}</td>`;
         } else {
           row += `<td></td>`;
       }
