@@ -1,0 +1,13 @@
+/* styles.css */
+
+/* Projection tables: thin columns */
+#table-container table {
+  table-layout: fixed;
+  width: auto;
+}
+
+#table-container th,
+#table-container td {
+  padding: 2px 4px;
+  white-space: nowrap;
+}

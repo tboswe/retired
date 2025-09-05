@@ -2,8 +2,14 @@
 //import * as bootstrap from 'bootstrap'
 
 //Global Variables
+//counters for unique id generation
 let personCounter = 0;
 let incomeCounter = 0;
+let savingsCounter = 0;
+let pensionCounter = 0;
+let assetCounter = 0;
+let debtCounter = 0;
+let expenseCounter = 0;
 const indexationRate = 0.03;
 const inflationRate = 0.03;
 const investmentRate = 0.07;
@@ -38,14 +44,17 @@ const income = {
   name: String, // e.g., company name
   amount: Number, // e.g., 100000
   raise: Number, // e.g., 5 for 5% yearly raise
-  inflationAdjustment: Number, // e.g., 0.03 for 3% inflation adjustment
 }
 
 //this is to hold savings accounts, whether rsp, tfsa, cash, etc.
 const savings = {
-  id: Number, 
-  type: String, // e.g., cash, margin, RSP, spousal RSP, TFSA, LRSP, LIRA, RESP
-}
+  id: Number,
+  type: String, // e.g., cash, TFSA, RSP
+  name: String, // e.g., “Personal TFSA”
+  amount: Number,
+  rate: Number // annual growth rate (investment rate)
+};
+
 
 //pension is for gross retirement income, where one could have a company pension, government pension, CPP, LIF, etc
 const pension = {
@@ -93,15 +102,15 @@ function addPerson(){
       </div>
       <div class="col-lg-2">
         <label for="person-current-age" class="form-label">Current Age</label>
-        <input type="number" class="form-control" id="person-current-age" min="0" step="100" placeholder="30" onChange="savePerson(this)" required>
+        <input type="number" class="form-control" id="person-current-age" min="0" step="1" value="30" onChange="savePerson(this)" required>
       </div>
       <div class="col-lg-2">
         <label for="person-retirement-age" class="form-label">Retirement Age</label>
-        <input type="number" class="form-control" id="person-retirement-age" min="0" step="100" placeholder="55" onChange="savePerson(this)" required>
+        <input type="number" class="form-control" id="person-retirement-age" min="0" step="1" Value="55" onChange="savePerson(this)" required>
       </div>
       <div class="col-lg-2">
         <label for="person-projection-age" class="form-label">Projection Age</label>
-        <input type="number" class="form-control" id="person-projection-age" min="0" step="100" placeholder="100" onChange="savePerson(this)" required>
+        <input type="number" class="form-control" id="person-projection-age" min="0" step="1" value="100" onChange="savePerson(this)" required>
       </div>
       <div class="col-lg-1">
         <button type="button" class="btn btn-danger btn-sm remove-row">
@@ -329,10 +338,6 @@ function addIncome(element) {
           <label for="income-raise" class="form-label ">Yearly Raise</label>
           <input type="number" class="form-control" id="income-raise" min="0" max="50" step="0.01" value="0.05" onChange="saveIncome(this)" required>
         </div>
-        <div class="col-lg-2">
-          <label for="income-inflation" class="form-label">Inflation Adjustment</label>
-          <input type="number" class="form-control" id="income-inflation" min="0" max="50" step="0.01" value="0.03" onChange="saveIncome(this)" required>
-        </div>
       <div class="col-lg-1">
         <button type="button" class="btn btn-danger btn-sm remove-row">
           <i class="bi bi-trash"></i> Remove
@@ -373,7 +378,6 @@ function saveIncome(e) {
     incomeData.name = row.querySelector('#income-name').value;
     incomeData.amount = parseFloat(row.querySelector('#income-amount').value);
     incomeData.raise = parseFloat(row.querySelector('#income-raise').value);
-    incomeData.inflationAdjustment = parseFloat(row.querySelector('#income-inflation').value);
 
     console.log(persons);
 }
@@ -412,6 +416,119 @@ function removeIncome(incomeId) {
 }
 
 //Savings Functions
+
+function confirmSavings() {
+  if (persons.length === 0) {
+    alert("You must add a person before adding savings.");
+    return;
+  }
+
+  const savingsRow = document.createElement('div');
+  savingsRow.className = 'row align-items-end mb-3';
+
+  // Build person dropdown
+  const personOptions = persons.map((p, id) => 
+    `<option value="${id}">${p.name || 'Person ' + (id + 1)}</option>`
+  ).join('');
+
+  savingsRow.innerHTML = `
+    <div class="col-lg-2">
+      <label for="savings-person" class="form-label">For?</label>
+      <select class="form-select" id="savings-person" required>
+        ${personOptions}
+      </select>
+    </div>
+    <div class="col-lg-2">
+      <label for="savings-name" class="form-label">Savings Name</label>
+      <input type="text" class="form-control" id="savings-name" placeholder="TFSA" required>
+    </div>
+    <div class="col-lg-2">
+      <label for="savings-amount" class="form-label">Amount</label>
+      <input type="number" class="form-control" id="savings-amount" min="0" step="100" value="0" required>
+    </div>
+    <div class="col-lg-1">
+      <button type="button" class="btn btn-primary btn-sm" onclick="addSavings(this)">
+        <i class="bi bi-plus"></i> Add
+      </button>
+    </div>
+    <div class="col-lg-1">
+      <button type="button" class="btn btn-danger btn-sm remove-row">
+        <i class="bi bi-trash"></i> Cancel
+      </button>
+    </div>
+  `;
+
+const savingsSection = document.querySelector('#savings-section');
+savingsSection.appendChild(savingsRow);
+
+
+  savingsRow.querySelector('.remove-row').addEventListener('click', () => savingsRow.remove());
+}
+
+function addSavings(element) {
+  const row = element.closest('.row');
+  const personSelect = row.querySelector('#savings-person');
+  const personIndex = personSelect.value;
+  const thisPerson = persons[personIndex];
+
+  const newSavings = {
+    id: savingsCounter++,
+    type: row.querySelector('#savings-name').value || 'Savings',
+    name: row.querySelector('#savings-name').value || 'Savings',
+    amount: parseFloat(row.querySelector('#savings-amount').value),
+    rate: investmentRate // default investment rate
+  };
+
+  if (!thisPerson.savings) thisPerson.savings = [];
+  thisPerson.savings.push(newSavings);
+
+  console.log(`Added savings for ${thisPerson.name}:`, newSavings);
+  row.dataset.savingsId = newSavings.id;
+  row.dataset.personId = thisPerson.id;
+
+
+  // Replace row with display
+  row.innerHTML = `
+    <div class="col-lg-2"><p>${thisPerson.name}</p></div>
+    <div class="col-lg-2"><p>${newSavings.name}</p></div>
+    <div class="col-lg-2"><p>${newSavings.amount.toFixed(0)}</p></div>
+    <div class="col-lg-1">
+      <button type="button" class="btn btn-danger btn-sm remove-row">
+        <i class="bi bi-trash"></i> Remove
+      </button>
+    </div>
+  `;
+
+  row.querySelector('.remove-row').addEventListener('click', () => removeSavings(thisPerson.id, newSavings.id));
+}
+
+function removeSavings(personId, savingsId) {
+  // Find the person
+  const person = persons.find(p => p.id == personId);
+  if (!person) {
+    console.error(`Person with ID ${personId} not found.`);
+    return;
+  }
+
+  // Remove the savings from the person's savings array
+  const index = person.savings.findIndex(s => s.id == savingsId);
+  if (index > -1) {
+    const removed = person.savings.splice(index, 1)[0];
+    console.log(`Removed savings "${removed.name}" (ID ${savingsId}) from ${person.name}`);
+  } else {
+    console.warn(`Savings ID ${savingsId} not found for ${person.name}`);
+  }
+
+  // Remove the row from the DOM
+  const row = document.querySelector(`.row[data-savings-id="${savingsId}"][data-person-id="${personId}"]`);
+  if (row) {
+    row.remove();
+    console.log(`Removed savings row from DOM for ${person.name}`);
+  } else {
+    console.warn(`DOM row for savings ID ${savingsId} not found.`);
+  }
+}
+
 
 //Pension Functions
 
@@ -453,12 +570,22 @@ function generateProjection() {
         }
       }
 
+      //load savings
+      if (persons[i].savings && persons[i].savings.length > 0) {
+        for (let j = 0; j < persons[i].savings.length; j++) {
+          columns.push(`${persons[i].savings[j].name} Savings`);
+        }
+      }
+
+    
+
       // Header
       const thead = document.createElement('thead');
-      let headerRow = `<h1>${persons[i].name}</h1>`;
+      let headerRow = `<tr><th colspan="${columns.length}"><h3>${persons[i].name}</h3></th></tr><tr>`;
       columns.forEach(col => headerRow += `<th>${col}</th>`);
       headerRow += '</tr>';
       thead.innerHTML = headerRow;
+
       table.appendChild(thead);
 
       // Body
@@ -477,16 +604,27 @@ function generateProjection() {
           for (let j = 0; j < persons[i].incomes.length; j++) {
             //totalIncome += incomeAmounts[j];
             // Update the amount for next year
-            incomeAmounts[j] += incomeAmounts[j] * persons[i].incomes[j].raise + incomeAmounts[j] * persons[i].incomes[j].inflationAdjustment;
+            incomeAmounts[j] *= (1 + persons[i].incomes[j].raise);
           
             row += `<td>${incomeAmounts[j].toFixed(0)}</td>`;
           }
         } else {
           row += `<td></td>`;
-      }
+        }
+        if (persons[i].savings && persons[i].savings.length > 0) {
+          for (let j = 0; j < persons[i].savings.length; j++) {
+            const s = persons[i].savings[j];
 
-  // Add more cells if needed
-  columns.slice(3).forEach(() => row += '<td></td>');
+            // Initialize yearly amount if not exists
+            if (s.amountByYear === undefined) s.amountByYear = s.amount; {
+
+              // Grow by rate (e.g., investmentRate)
+              s.amountByYear *= (1 + (s.rate || 0)); 
+
+              row += `<td>${s.amountByYear.toFixed(0)}</td>`;
+            }
+          }
+        }
 
   row += '</tr>';
   tbody.innerHTML += row;

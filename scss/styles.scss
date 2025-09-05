@@ -96,6 +96,18 @@ body {
   padding: 1.5rem;
 }
 
+#table-container table.table {
+  table-layout: fixed;
+  width: auto;
+}
+
+#table-container table.table th,
+#table-container table.table td {
+  padding: 2px 4px;
+  white-space: nowrap;
+}
+
+
 .bi {
   width: 1em;
   height: 1em;
