@@ -12,7 +12,6 @@ let debtCounter = 0;
 let expenseCounter = 0;
 const indexationRate = 0.03;
 const inflationRate = 0.03;
-const investmentRate = 0.07;
 
 
 //storage
@@ -30,7 +29,7 @@ const person = {
   retirementAge: Number,
   projectionAge: Number,
   incomes: [],
-  //savings: [],
+  savings: [],
   //pensions: [],
   //assets: [],
   //debts: [],
@@ -52,7 +51,8 @@ const savings = {
   type: String, // e.g., cash, TFSA, RSP
   name: String, // e.g., “Personal TFSA”
   amount: Number,
-  rate: Number // annual growth rate (investment rate)
+  taxfree: Boolean, // Indicates if the savings account is tax-free
+  returnRate: Number // annual growth rate (investment rate)
 };
 
 
@@ -90,165 +90,285 @@ const expense = {
   shared: Boolean, // Indicates if the expense is shared
 };
 
+//DOM-Object maps
+const personToRowMap = new WeakMap();
+
 //Persons
 function addPerson(){
+
     const personRow = document.createElement('div');
     personRow.className = 'row align-items-end mb-3';
   
     personRow.innerHTML = `
       <div class="col-lg-2">
         <label for="person-name" class="form-label">Name</label>
-        <input type="text" class="form-control" id="person-name" placeholder="Johnny" onChange="savePerson(this)" required>
+        <input type="text" class="form-control" id="person-name" placeholder="Johnny" value="Johnny" required>
       </div>
       <div class="col-lg-2">
         <label for="person-current-age" class="form-label">Current Age</label>
-        <input type="number" class="form-control" id="person-current-age" min="0" step="1" value="30" onChange="savePerson(this)" required>
+        <input type="number" class="form-control" id="person-current-age" min="0" step="1" value="30"  required>
       </div>
       <div class="col-lg-2">
         <label for="person-retirement-age" class="form-label">Retirement Age</label>
-        <input type="number" class="form-control" id="person-retirement-age" min="0" step="1" Value="55" onChange="savePerson(this)" required>
+        <input type="number" class="form-control" id="person-retirement-age" min="0" step="1" Value="55" required>
       </div>
       <div class="col-lg-2">
         <label for="person-projection-age" class="form-label">Projection Age</label>
-        <input type="number" class="form-control" id="person-projection-age" min="0" step="1" value="100" onChange="savePerson(this)" required>
+        <input type="number" class="form-control" id="person-projection-age" min="0" step="1" value="100"  required>
       </div>
-      <div class="col-lg-1">
+      <div class="col-lg-2">
+      <span>
+      <button type="button" class="btn btn-primary btn-sm save-row">
+        <i class="bi bi-plus"></i> Save
+      </button>
         <button type="button" class="btn btn-danger btn-sm remove-row">
           <i class="bi bi-trash"></i> Remove
         </button>
+        </span>
       </div>
     `;
 
-    
+    //Append the new row to the persons section
+    const personsSection = document.querySelector('#persons-section');
+    personsSection.appendChild(personRow);
+
+    // Add event listeners to buttons
+    personRow.querySelector('.save-row').addEventListener('click', ()=> {savePerson(personCounter, personRow)}); //invoke the save function, give it a new pId, and assign it to row
+    personRow.querySelector('.remove-row').addEventListener('click', () => {personRow.remove()}); //simply remove DOM row
+}
+
+function savePerson(personId,personRow){
+  //if new person
+  if (personId ===personCounter) {
     // Create a new person object and add it to the persons array
-    const newPerson = {
-      id: personCounter,  
-      name: 'Johnny',
-      age: 30,
-      retirementAge: 55,
-      projectionAge: 100,
-      incomes: [],
+    let newPerson = {
+      id: personCounter
     };
     personCounter++; // Increment the ID counter for the next object
 
     persons.push(newPerson);
-    personRow.dataset.personId = newPerson.id; // Store the index of the person in the row
+    console.log(`Created new person with ID: ${newPerson.id}`);
+    //personToRowMap - map newPerson to personRow that has 'newRow' as id
+    personToRowMap.set(newPerson,personRow);
+    //set thisPerson in working memory
+    thisPerson=newPerson;
+    personId=thisPerson;
+  } else {
+    //get person object
+    const pid = Number(personId); // normalize type
+    const idx = persons.findIndex(p => p.id === pid);
+    if (idx === -1) {
+      console.error(`Person with ID ${personId} not found in persons array.`);
+      return;
+    }
+    //set thisPerson
+    thisPerson=persons[idx];
+  }
 
+  //update the person object
+  thisPerson.name = personRow.querySelector('#person-name').value || `Person ${pid}`;
+  thisPerson.age = parseInt(personRow.querySelector('#person-current-age').value, 10) || 30;
+  thisPerson.retirementAge = parseInt(personRow.querySelector('#person-retirement-age').value, 10) || 55;
+  thisPerson.projectionAge = parseInt(personRow.querySelector('#person-projection-age').value, 10) || 100;
+  thisPerson.incomes = thisPerson.incomes || [];
+  thisPerson.savings = thisPerson.savings || [];
+  console.log(`Saved person: ${thisPerson.name} (ID: ${thisPerson.id})`, thisPerson);
   
-    // Append the new row to the Persons section
-    const personSection = document.querySelector('#add-person-button').parentNode.parentNode;
-    personSection.appendChild(personRow);
-  
-    // Add event listener to the remove button
-    personRow.querySelector('.remove-row').addEventListener('click', () => {
-      removePerson(personRow.dataset.personId);
-      //persons.splice(personRow.dataset.personIndex,1) ; // remove the person from the persons array
-      //personRow.remove();
+  // Replace row with display
+  personRow.innerHTML = `
+    <span>
+    ${thisPerson.name}: Age: ${thisPerson.age} | Retirement: ${thisPerson.retirementAge} | Projection: ${thisPerson.projectionAge}
 
-        // Update the index for all rows after the removed one
-      //const allRows = document.querySelectorAll('.row.align-items-end.mb-3');
-      //allRows.forEach((row, idx) => {
-        //row.dataset.personId = idx;});
-    });
+        <button type="button" id="btn-person-edit" class="btn btn-primary btn-sm edit-row">
+          <i class=""></i> Edit
+        </button>
+        <button type="button" class="btn btn-danger btn-sm remove-row">
+          <i class="bi bi-trash"></i> Remove
+        </button>
+      </span>  
 
-    console.log(persons);
+  `;
+
+  personRow.querySelector('.remove-row').addEventListener('click', () => removePerson(thisPerson.id));
+  personRow.querySelector('.edit-row').addEventListener('click', () => editPerson(thisPerson.id));
+
 }
 
-function savePerson(element){
+function editPerson(personId){
+  const pid = Number(personId); // normalize type
+  const idx = persons.findIndex(p => p.id === pid);
+  if (idx === -1) {
+    console.error(`Person with ID ${personId} not found in persons array.`);
+    return;
+  }
+   //set person and get associated row
+  const thisPerson = persons[idx];
+  const personRow = personToRowMap.get(thisPerson);
 
-    const personRow = element.closest('.row'); // Get the parent row of the input element
-    console.log(`Saving person data for row: ${personRow.dataset.personId}`);
-    const personId = personRow.dataset.personId; // Get the id of the person from the row's dataset
-
-    // Update the corresponding person object in the persons array  
-    if (personId !== undefined) {
-        const person = persons.find(person => person.id == personId);
-        console.log(`we found ${person.name} with id ${person.id}`);
-        if (element.id === 'person-name') {
-            person.name = element.value;
-            console.log(`${person.name}'s name updated to: ${person.name}`);
-        } else if (element.id === 'person-current-age') {
-            person.age = parseInt(element.value, 10);
-            console.log(`${person.name}'s current age updated to: ${person.age}`);
-        } else if (element.id === 'person-retirement-age') {
-            person.retirementAge = parseInt(element.value, 10);
-            console.log(`${person.name}'s retirement age updated to: ${person.retirementAge}`);
-        } else if (element.id === 'person-projection-age') {
-            person.projectionAge = parseInt(element.value, 10);
-            console.log(`${person.name}'s projection age updated to: ${person.projectionAge}`);
-        }
-    }
-
-    console.log(persons);
+    personRow.innerHTML = `
+      <div class="col-lg-2">
+        <label for="person-name" class="form-label">Name</label>
+        <input type="text" class="form-control" id="person-name" value="${thisPerson.name}" required>
+      </div>
+      <div class="col-lg-2">
+        <label for="person-current-age" class="form-label">Current Age</label>
+        <input type="number" class="form-control" id="person-current-age" min="0" step="1" value="${thisPerson.age}"  required>
+      </div>
+      <div class="col-lg-2">
+        <label for="person-retirement-age" class="form-label">Retirement Age</label>
+        <input type="number" class="form-control" id="person-retirement-age" min="0" step="1" Value="${thisPerson.retirementAge}" required>
+      </div>
+      <div class="col-lg-2">
+        <label for="person-projection-age" class="form-label">Projection Age</label>
+        <input type="number" class="form-control" id="person-projection-age" min="0" step="1" value="${thisPerson.projectionAge}"  required>
+      </div>
+      <div class="col-lg-2">
+        <span>
+          <button type="button" id="btn-person-save" class="btn btn-primary btn-sm save-row">
+            <i class="bi bi-plus"></i> Save
+          </button>
+          <button type="button" id="btn-person-cancel" class="btn btn-danger btn-sm remove-row">
+            <i class="bi bi-trash"></i> Cancel
+          </button>
+        </span>
+      </div>
+    `;
+    
+    personRow.querySelector('.save-row').addEventListener('click', () => savePerson(thisPerson.id, personRow));
+    personRow.querySelector('.remove-row').addEventListener('click', () => cancelEditPerson(thisPerson.id));
 };
 
-function removePerson(personId){
-  const thisPerson = persons.find(person => person.id == personId);
-  console.log(`Removing: ${thisPerson.name}`);
-  
-  //remove associated incomes
-  for (let i = 0; i < thisPerson.incomes.length; ){
-    console.log(`Removing income: ${thisPerson.incomes[i].name}`);
-    removeIncome(thisPerson.incomes[i].id); // Call the removeIncome function with the income ID
+function cancelEditPerson(personId) {
+  //we just need to re-render the person display
+  const pid = Number(personId); // normalize type
+  const idx = persons.findIndex(p => p.id === pid);
+  if (idx === -1) {
+    console.error(`Person with ID ${personId} not found in persons array.`);
+    return;
   }
 
-  //personremoval
-  const personRow = document.querySelector(`.row.align-items-end.mb-3[data-person-id="${thisPerson.id}"]`);
-  console.log(`Person Row: ${personRow.dataset.personId}`);
-  if (personRow) {
-    personRow.remove(); // Remove the row from the DOM
-    let idx = persons.findIndex(person => person.id == thisPerson.id);
-    if (idx !== -1) {
-      persons.splice(idx, 1); // Remove the person from the persons array
-      console.log(`Removed ${thisPerson.name} from persons array.`);
-    } else {
-      console.error(`Person with ID ${thisPerson.id} not found in persons array.`);
-    }
-  } else {
-    console.error(`${thisPerson.name} not found.`);
-  }
+  const thisPerson = persons[idx];
+  const personRow = personToRowMap.get(thisPerson);
 
-  console.log(persons);
+  personRow.innerHTML = `
+    <span>
+    ${thisPerson.name}: Age: ${thisPerson.age}, Retirement: ${thisPerson.retirementAge},  Projection: ${thisPerson.projectionAge}.
+
+        <button type"button" class="btn btn-primary btn-sm edit-row" >
+          <i class=""></i> Edit
+        </button>
+        <button type="button" class="btn btn-danger btn-sm remove-row">
+          <i class="bi bi-trash"></i> Remove
+        </button>
+      </span>  
+  `;
+
+  personRow.querySelector('.edit-row').addEventListener('click', () => editPerson(persons[idx].id));
+  personRow.querySelector('.remove-row').addEventListener('click', () => removePerson(persons[idx].id));
 }
+
+function removePerson(personId) {
+  const pid = Number(personId); // normalize type
+  const idx = persons.findIndex(p => p.id === pid);
+  if (idx === -1) {
+    console.error(`Person with ID ${personId} not found in persons array.`);
+    return;
+  }
+
+  const thisPerson = persons[idx];
+  console.log(`Removing person: ${thisPerson.name} (id ${thisPerson.id})`);
+
+  // Remove associated incomes safely
+  if (Array.isArray(thisPerson.incomes)) {
+    // keep removing the first income until none left
+    while (thisPerson.incomes.length > 0) {
+      const inc = thisPerson.incomes[0];
+      console.log(`Removing income: ${inc.name} (id ${inc.id})`);
+      // call your existing remover — it should remove from the person's incomes array
+      removeIncome(inc.id);
+
+      // defensive fallback: if removeIncome didn't remove it, shift it ourselves
+      if (thisPerson.incomes.length > 0 && thisPerson.incomes[0].id === inc.id) {
+        console.warn(`removeIncome didn't remove income id ${inc.id}. Forcing removal.`);
+        thisPerson.incomes.shift();
+      }
+    }
+  }
+
+  // If you have other associated arrays (savings, assets, etc.), remove them similarly:
+  if (Array.isArray(thisPerson.savings)) {
+    while (thisPerson.savings.length > 0) {
+      const s = thisPerson.savings[0];
+      console.log(`Removing savings: ${s.name} (id ${s.id})`);
+      removeSavings(thisPerson.id, s.id);
+      if (thisPerson.savings.length > 0 && thisPerson.savings[0].id === s.id) {
+        thisPerson.savings.shift();
+      }
+    }
+  }
+
+  // Remove any DOM rows that reference this person (there may be multiple)
+  personToRowMap.get(thisPerson)?.remove(); // Remove main person row if exists
+
+  // Remove the person from the array
+  persons.splice(idx, 1);
+
+  // Log a snapshot so it can't be misread later
+  console.log('Person removed. Remaining person ids:', persons.map(p => p.id));
+}
+
 
 //Income Functions
 function confirmIncome(element) {
-    const incomeRow = document.createElement('div');
-    incomeRow.className = 'row align-items-end mb-3'; // Add a class for styling
+  //sanity check  
+  if (persons.length === 0) {
+    alert("You must add a person before adding savings.");
+    return;
+  }
 
-    if (persons.length === 0) {
-      alert("You must add a person before adding income.");
-      return; // Stop the function if no persons exist
-    }
-
-    // Build the person dropdown options
-    let personOptions = persons.map((p, id) => 
-      `<option value="${id}">${p.name || 'Person ' + (id + 1)}</option>`
-    ).join('');
+  //create row
+  const incomeRow = document.createElement('div');
+  incomeRow.className = 'row align-items-end mb-3';
 
 
+  // Build the person dropdown options
+  let personOptions = persons.map((p, id) => 
+    `<option value="${id}">${p.name || 'Person ' + (id + 1)}</option>`
+  ).join('');
 
   incomeRow.innerHTML = `
-        <div class="col-lg-2">
-          <label for="income-person" class="form-label">For?</label>
-          <select class="form-select" id="income-person" required>
-            ${personOptions}
-          </select>
-        </div>
-        <div class="col-lg-1">
-          <button type="button" id="confirm-income" class="btn btn-primary btn-sm" onClick="addIncome(this)">
-            <i class="bi bi-plus"></i> Confirm
-          </button>
-        </div>
-        <div class="col-lg-1">
-          <button type="button" class="btn btn-danger btn-sm remove-row">
-            <i class="bi bi-trash"></i> Cancel
-          </button>
-        </div>
+    <div class="col-lg-2">
+      <label for="income-person" class="form-label">For?</label>
+      <select class="form-select" id="income-person" required>
+        ${personOptions}
+      </select>
+    </div>
+    <div class="col-lg-2">
+      <input type="text" class="form-control" id="income-name" placeholder="Source Name" value='Income' required>
+    </div>
+    <div class="col-lg-2">
+      <input type="number" class="form-control" id="income-amount" placeholder="50000" value='50000' required>
+    </div>
+    <div class="col-lg-1">
+      <input type="number" class="form-control" id="income-rate" placeholder="Growth Rate" min="-2" max="2" step="0.01" value='0.03' required>
+    </div>
+    <div class="col-lg-2">
+    <span>
+      <button type="button" class="btn btn-primary btn-sm" onclick="addSavings(this)">
+        <i class="bi bi-plus"></i> Add
+      </button>
+            <button type="button" class="btn btn-danger btn-sm remove-row">
+        <i class="bi bi-trash"></i> Cancel
+      </button>
+      </span>
+    </div>
+    <div class="col-lg-1">
+
+    </div>
     `;
   
     // Append the new row to the income section
-    const incomeSection = document.querySelector('#add-income-button').parentNode.parentNode;
+    const incomeSection = document.querySelector('#income-section');
     incomeSection.appendChild(incomeRow);
 
     // Add event listener to the remove button
@@ -432,7 +552,7 @@ function confirmSavings() {
   ).join('');
 
   savingsRow.innerHTML = `
-    <div class="col-lg-2">
+  <div class="col-lg-2">
       <label for="savings-person" class="form-label">For?</label>
       <select class="form-select" id="savings-person" required>
         ${personOptions}
@@ -445,6 +565,16 @@ function confirmSavings() {
     <div class="col-lg-2">
       <label for="savings-amount" class="form-label">Amount</label>
       <input type="number" class="form-control" id="savings-amount" min="0" step="100" value="0" required>
+    </div>
+    <div class="col-lg-2 d-flex align-items-center">
+      <div class="form-check mt-4">
+        <input class="form-check-input" type="checkbox" id="savings-taxfree">
+        <label class="form-check-label" for="savings-taxfree">Tax Free</label>
+      </div>
+      <span>
+        <label class="form-label ms-3" for="savings-rate">Rate</label>
+        <input type="number" class="form-control" id="savings-rate" min="-2" max="2" step="0.01" value="0.07" required>
+      </span>
     </div>
     <div class="col-lg-1">
       <button type="button" class="btn btn-primary btn-sm" onclick="addSavings(this)">
@@ -476,7 +606,8 @@ function addSavings(element) {
     type: row.querySelector('#savings-name').value || 'Savings',
     name: row.querySelector('#savings-name').value || 'Savings',
     amount: parseFloat(row.querySelector('#savings-amount').value),
-    rate: investmentRate // default investment rate
+    taxfree: row.querySelector('#savings-taxfree').checked,
+    returnRate: row.querySelector('#savings-rate').value, // default investment rate
   };
 
   if (!thisPerson.savings) thisPerson.savings = [];
@@ -492,6 +623,8 @@ function addSavings(element) {
     <div class="col-lg-2"><p>${thisPerson.name}</p></div>
     <div class="col-lg-2"><p>${newSavings.name}</p></div>
     <div class="col-lg-2"><p>${newSavings.amount.toFixed(0)}</p></div>
+    <div class="col-lg-2">${newSavings.taxfree ? "Tax Free" : "Taxable"}</div>
+    <div class="col-lg-2"><p>${(newSavings.returnRate * 100).toFixed(2)}%</p></div>
     <div class="col-lg-1">
       <button type="button" class="btn btn-danger btn-sm remove-row">
         <i class="bi bi-trash"></i> Remove
@@ -566,14 +699,14 @@ function generateProjection() {
         alert(`${persons[i].name} has no income`)
       } else {
         for(let j=0; j<persons[i].incomes.length; j++){
-          columns.push(`${persons[i].incomes[j].name} Income`);
+          columns.push(`${persons[i].incomes[j].name}`);
         }
       }
 
       //load savings
       if (persons[i].savings && persons[i].savings.length > 0) {
         for (let j = 0; j < persons[i].savings.length; j++) {
-          columns.push(`${persons[i].savings[j].name} Savings`);
+          columns.push(`${persons[i].savings[j].taxfree ? `${persons[i].savings[j].name}*` : `${persons[i].savings[j].name}`}`);
         }
       }
 
@@ -619,7 +752,7 @@ function generateProjection() {
             if (s.amountByYear === undefined) s.amountByYear = s.amount; {
 
               // Grow by rate (e.g., investmentRate)
-              s.amountByYear *= (1 + (s.rate || 0)); 
+              s.amountByYear *= (1 + (s.returnRate || 0)); 
 
               row += `<td>${s.amountByYear.toFixed(0)}</td>`;
             }
