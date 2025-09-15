@@ -11,3 +11,13 @@
   padding: 2px 4px;
   white-space: nowrap;
 }
+
+.income-section {
+  padding-left: 2rem;  /* indent */
+  background-color: #f9f9f9; /* optional for contrast */
+}
+
+.savings-section {
+  padding-left: 2rem;  /* indent */
+  background-color: #f9f9f9; /* optional for contrast */
+}

@@ -90,14 +90,14 @@ const expense = {
   shared: Boolean, // Indicates if the expense is shared
 };
 
-//DOM-Object maps
-const personToRowMap = new WeakMap();
+//Object to DOM maps
+const personToRowMap = new Map();
 
 //Persons
 function addPerson(){
 
     const personRow = document.createElement('div');
-    personRow.className = 'row align-items-end mb-3';
+    personRow.className = 'row parent align-items-end mb-3';
   
     personRow.innerHTML = `
       <div class="col-lg-2">
@@ -116,54 +116,78 @@ function addPerson(){
         <label for="person-projection-age" class="form-label">Projection Age</label>
         <input type="number" class="form-control" id="person-projection-age" min="0" step="1" value="100"  required>
       </div>
-      <div class="col-lg-2">
+      <div class="col-lg-3">
       <span>
-      <button type="button" class="btn btn-primary btn-sm save-row">
-        <i class="bi bi-plus"></i> Save
-      </button>
+        <button type="button" class="btn btn-primary btn-sm add-income">
+          <i class="bi bi-plus"></i> Income
+        </button>
+        <button type="button" class="btn btn-primary btn-sm add-savings">
+          <i class="bi bi-plus"></i> Savings
+        </button>
         <button type="button" class="btn btn-danger btn-sm remove-row">
           <i class="bi bi-trash"></i> Remove
         </button>
         </span>
       </div>
+      <!-- 🔽 Income container goes here -->
+      <div class="col-12 income-section mt-3 pt-2 border-top border-bottom" style="margin-left:2rem;">
+        <!-- dynamically added income rows will go here -->
+      </div>
+      <!-- 🔽 Savings container goes here -->
+      <div class="col-12 savings-section mt-3 pt-2 border-top border-bottom" style="margin-left:2rem;">
+        <!-- dynamically added income rows will go here -->
+      </div>
     `;
+
+    //create person object and add to persons array
+    let newPerson = {
+      id: personCounter
+    };
+    personCounter++; // Increment the ID counter for the next object
+    
+    //push person to persons array
+    persons.push(newPerson);
+    console.log(`Created new person with ID: ${newPerson.id}`);
+
+    //personToRowMap - map newPerson to personRow that has 'newRow' as id
+    personToRowMap.set(newPerson.id,personRow);
+
+    //save person
+    savePerson(newPerson.id);
 
     //Append the new row to the persons section
     const personsSection = document.querySelector('#persons-section');
     personsSection.appendChild(personRow);
 
     // Add event listeners to buttons
-    personRow.querySelector('.save-row').addEventListener('click', ()=> {savePerson(personCounter, personRow)}); //invoke the save function, give it a new pId, and assign it to row
-    personRow.querySelector('.remove-row').addEventListener('click', () => {personRow.remove()}); //simply remove DOM row
+    personRow.querySelector('.remove-row').addEventListener('click', () => {removePerson(newPerson.id)}); //removePerson
+    personRow.querySelector('.add-income').addEventListener('click', () => {addIncome(newPerson.id)}); //addIncome
+    personRow.querySelector('.add-savings').addEventListener('click', () => {addSavings()}); //addSavings
+
+    // Add event listeners to input fields for dynamic saving
+    personRow.querySelectorAll('input').forEach(input => {
+      input.addEventListener('change', () => {
+        savePerson(newPerson.id);
+      });
+    });
+
 }
 
-function savePerson(personId,personRow){
-  //if new person
-  if (personId ===personCounter) {
-    // Create a new person object and add it to the persons array
-    let newPerson = {
-      id: personCounter
-    };
-    personCounter++; // Increment the ID counter for the next object
-
-    persons.push(newPerson);
-    console.log(`Created new person with ID: ${newPerson.id}`);
-    //personToRowMap - map newPerson to personRow that has 'newRow' as id
-    personToRowMap.set(newPerson,personRow);
-    //set thisPerson in working memory
-    thisPerson=newPerson;
-    personId=thisPerson;
-  } else {
-    //get person object
-    const pid = Number(personId); // normalize type
-    const idx = persons.findIndex(p => p.id === pid);
-    if (idx === -1) {
-      console.error(`Person with ID ${personId} not found in persons array.`);
-      return;
-    }
-    //set thisPerson
-    thisPerson=persons[idx];
+function savePerson(personId){
+  //find person in persons array
+  const pid = Number(personId); // normalize type
+  const idx = persons.findIndex(p => p.id === pid);
+  if (idx === -1) {
+    console.error(`Person with ID ${personId} not found in persons array.`);
+    return;
   }
+
+  //set thisPerson
+  thisPerson=persons[idx];
+  console.log(`Saving person: ${thisPerson.name} (ID: ${thisPerson.id})`, thisPerson);
+
+  //get associated row
+  const personRow = personToRowMap.get(thisPerson.id);
 
   //update the person object
   thisPerson.name = personRow.querySelector('#person-name').value || `Person ${pid}`;
@@ -173,98 +197,6 @@ function savePerson(personId,personRow){
   thisPerson.incomes = thisPerson.incomes || [];
   thisPerson.savings = thisPerson.savings || [];
   console.log(`Saved person: ${thisPerson.name} (ID: ${thisPerson.id})`, thisPerson);
-  
-  // Replace row with display
-  personRow.innerHTML = `
-    <span>
-    ${thisPerson.name}: Age: ${thisPerson.age} | Retirement: ${thisPerson.retirementAge} | Projection: ${thisPerson.projectionAge}
-
-        <button type="button" id="btn-person-edit" class="btn btn-primary btn-sm edit-row">
-          <i class=""></i> Edit
-        </button>
-        <button type="button" class="btn btn-danger btn-sm remove-row">
-          <i class="bi bi-trash"></i> Remove
-        </button>
-      </span>  
-
-  `;
-
-  personRow.querySelector('.remove-row').addEventListener('click', () => removePerson(thisPerson.id));
-  personRow.querySelector('.edit-row').addEventListener('click', () => editPerson(thisPerson.id));
-
-}
-
-function editPerson(personId){
-  const pid = Number(personId); // normalize type
-  const idx = persons.findIndex(p => p.id === pid);
-  if (idx === -1) {
-    console.error(`Person with ID ${personId} not found in persons array.`);
-    return;
-  }
-   //set person and get associated row
-  const thisPerson = persons[idx];
-  const personRow = personToRowMap.get(thisPerson);
-
-    personRow.innerHTML = `
-      <div class="col-lg-2">
-        <label for="person-name" class="form-label">Name</label>
-        <input type="text" class="form-control" id="person-name" value="${thisPerson.name}" required>
-      </div>
-      <div class="col-lg-2">
-        <label for="person-current-age" class="form-label">Current Age</label>
-        <input type="number" class="form-control" id="person-current-age" min="0" step="1" value="${thisPerson.age}"  required>
-      </div>
-      <div class="col-lg-2">
-        <label for="person-retirement-age" class="form-label">Retirement Age</label>
-        <input type="number" class="form-control" id="person-retirement-age" min="0" step="1" Value="${thisPerson.retirementAge}" required>
-      </div>
-      <div class="col-lg-2">
-        <label for="person-projection-age" class="form-label">Projection Age</label>
-        <input type="number" class="form-control" id="person-projection-age" min="0" step="1" value="${thisPerson.projectionAge}"  required>
-      </div>
-      <div class="col-lg-2">
-        <span>
-          <button type="button" id="btn-person-save" class="btn btn-primary btn-sm save-row">
-            <i class="bi bi-plus"></i> Save
-          </button>
-          <button type="button" id="btn-person-cancel" class="btn btn-danger btn-sm remove-row">
-            <i class="bi bi-trash"></i> Cancel
-          </button>
-        </span>
-      </div>
-    `;
-    
-    personRow.querySelector('.save-row').addEventListener('click', () => savePerson(thisPerson.id, personRow));
-    personRow.querySelector('.remove-row').addEventListener('click', () => cancelEditPerson(thisPerson.id));
-};
-
-function cancelEditPerson(personId) {
-  //we just need to re-render the person display
-  const pid = Number(personId); // normalize type
-  const idx = persons.findIndex(p => p.id === pid);
-  if (idx === -1) {
-    console.error(`Person with ID ${personId} not found in persons array.`);
-    return;
-  }
-
-  const thisPerson = persons[idx];
-  const personRow = personToRowMap.get(thisPerson);
-
-  personRow.innerHTML = `
-    <span>
-    ${thisPerson.name}: Age: ${thisPerson.age}, Retirement: ${thisPerson.retirementAge},  Projection: ${thisPerson.projectionAge}.
-
-        <button type"button" class="btn btn-primary btn-sm edit-row" >
-          <i class=""></i> Edit
-        </button>
-        <button type="button" class="btn btn-danger btn-sm remove-row">
-          <i class="bi bi-trash"></i> Remove
-        </button>
-      </span>  
-  `;
-
-  personRow.querySelector('.edit-row').addEventListener('click', () => editPerson(persons[idx].id));
-  personRow.querySelector('.remove-row').addEventListener('click', () => removePerson(persons[idx].id));
 }
 
 function removePerson(personId) {
@@ -308,7 +240,13 @@ function removePerson(personId) {
   }
 
   // Remove any DOM rows that reference this person (there may be multiple)
-  personToRowMap.get(thisPerson)?.remove(); // Remove main person row if exists
+  personToRowMap.get(thisPerson.id)?.remove(); // Remove main person row if exists
+  personToRowMap.delete(thisPerson.id); // Remove from map
+
+  document.querySelectorAll(`[data-person-id="${thisPerson.id}"]`).forEach(row => {
+    row.remove();
+    console.log(`Removed associated row with data-person-id ${thisPerson.id}`);
+  });
 
   // Remove the person from the array
   persons.splice(idx, 1);
@@ -319,30 +257,33 @@ function removePerson(personId) {
 
 
 //Income Functions
-function confirmIncome(element) {
-  //sanity check  
-  if (persons.length === 0) {
-    alert("You must add a person before adding savings.");
+function addIncome(personId) {
+  //get personRow from personToRowMap
+  let personRow = personToRowMap.get(personId);
+  if (!personRow) {
+    console.error(`Person row for person ID ${personId} not found.`);
     return;
   }
 
-  //create row
+  //get incomeSection within personRow
+  let incomeSection = personRow.querySelector('.income-section');
+
+  //create income row
   const incomeRow = document.createElement('div');
-  incomeRow.className = 'row align-items-end mb-3';
+  incomeRow.className = 'row mb-2';
 
+  //find person in persons array
+  const pid = Number(personId); // normalize type
+  const idx = persons.findIndex(p => p.id === pid);
+  if (idx === -1) {
+    console.error(`Person with ID ${personId} not found in persons array.`);
+    return;
+  }
 
-  // Build the person dropdown options
-  let personOptions = persons.map((p, id) => 
-    `<option value="${id}">${p.name || 'Person ' + (id + 1)}</option>`
-  ).join('');
+  let thisPerson = persons[idx];
+  console.log(`Adding income for person: ${thisPerson.name} (ID: ${thisPerson.id})`);
 
   incomeRow.innerHTML = `
-    <div class="col-lg-2">
-      <label for="income-person" class="form-label">For?</label>
-      <select class="form-select" id="income-person" required>
-        ${personOptions}
-      </select>
-    </div>
     <div class="col-lg-2">
       <input type="text" class="form-control" id="income-name" placeholder="Source Name" value='Income' required>
     </div>
@@ -354,11 +295,8 @@ function confirmIncome(element) {
     </div>
     <div class="col-lg-2">
     <span>
-      <button type="button" class="btn btn-primary btn-sm" onclick="addSavings(this)">
-        <i class="bi bi-plus"></i> Add
-      </button>
-            <button type="button" class="btn btn-danger btn-sm remove-row">
-        <i class="bi bi-trash"></i> Cancel
+      <button type="button" class="btn btn-danger btn-sm remove-row">
+        <i class="bi bi-trash"></i> Remove
       </button>
       </span>
     </div>
@@ -366,125 +304,34 @@ function confirmIncome(element) {
 
     </div>
     `;
-  
-    // Append the new row to the income section
-    const incomeSection = document.querySelector('#income-section');
-    incomeSection.appendChild(incomeRow);
+
+    // Create new income object and add to thisPerson.incomes
+    const newIncome = {
+      id: incomeCounter++, // Unique ID
+      type: 'salary', // Default type
+      name: incomeRow.querySelector('#income-name').value || 'Income',
+      amount: parseFloat(incomeRow.querySelector('#income-amount').value) || 50000,
+      raise: parseFloat(incomeRow.querySelector('#income-rate').value) || 0.03,
+    };
 
     // Add event listener to the remove button
     incomeRow.querySelector('.remove-row').addEventListener('click', () => {
-      incomeRow.remove(); // Remove the income row
+      removeIncome(incomeId); // Remove the income row
     });
+
+    // Add event listeners to input fields for dynamic saving
+    incomeRow.querySelectorAll('input').forEach(input => {
+      input.addEventListener('change', () => {
+        saveIncome(newIncome.id);
+      });
+    });
+
+    // Append the income row to the income section
+    incomeSection.appendChild(incomeRow);
 
   }
 
-function addIncome(element) {
-    // Get the parent row of the button
-    let row = element.closest('.row'); // Get the parent row of the button
-
-    // Get the selected person index
-    if (!row) {
-      console.error('Row element not found.');
-      return;
-    }
-    // Check if the row has the income-person select element
-    if (!row.querySelector('#income-person')) {
-      console.error('Income person select element not found in the row.');
-      return;
-    }
-    // Get the person select element
-    const personSelect = row.querySelector('#income-person'); // Get the person select element from the row
-    // Check if the person select element exists and has a selected index
-    if (!personSelect) {
-      console.error('Person select element not found.');
-      return;
-    }
-    if (personSelect.selectedIndex < 0) {
-      console.error('No person selected.');
-      return;
-    }
-    // Get the selected index of the person
-    const selectedIndex = personSelect.value; // Get the selected index of the person
-    if (selectedIndex < 0 || selectedIndex >= persons.length) {
-      console.error(`Invalid person index: ${selectedIndex}`);
-      return;
-    }
-    // Get the selected person object
-    const thisPerson = persons[selectedIndex]; // Get the selected person object
-    if (!thisPerson) {
-      console.error(`Person with index ${selectedIndex} not found.`);
-      return;
-    }
-    console.log(`Adding income for person: ${thisPerson.name} (ID: ${thisPerson.id})`);
-
-    const newIncome = {
-      id: incomeCounter, // Use the length of incomes array to set a unique ID
-      type: 'salary', // Default type, can be changed later
-      name: '',
-      amount: 100000,
-      raise: 0.05, // Default raise rate
-      inflationAdjustment: inflationRate // Default inflation adjustment
-    };
-    incomeCounter++; // Increment the ID counter for the next object
-    if (!thisPerson.incomes) {
-      thisPerson.incomes = []; // Initialize incomes array if it doesn't exist
-    }
-    console.log(`Creating new income with ID: ${newIncome.id} for person: ${thisPerson.name}`);
-    thisPerson.incomes.push(newIncome); // Add the new income object to the selected person's incomes
-
-    //store the income id in the row
-    row.dataset.incomeId = newIncome.id; // Store the income ID in the row's dataset
-    //store the person id in the row
-    row.dataset.personId = thisPerson.id; // Store the person ID in the row's dataset
-    console.log(`New income added for person: ${thisPerson.name} with ID: ${newIncome.id}`);
-
-    //Clear the confirmation, add the income row
-    row.innerHTML = ''; // Clear the row's inner HTML before adding new content
-    // Build the income row HTML
-    row.innerHTML = `  
-        <div class="col-lg-1">
-          <label for="income-person" class="form-label">Person</label>
-          <p id="income-person">${thisPerson.name}</p>
-        </div>
-        <div class="col-lg-2">
-          <label for="income-name" class="form-label">Income Name</label>
-          <input type="text" class="form-control" id="income-name" placeholder="Company Name" onChange="saveIncome(this)" required>
-        </div>
-        <div class="col-lg-2">
-          <label for="income-amount" class="form-label">Yearly Amount</label>
-          <input type="number" class="form-control" id="income-amount" min="0" step="100" value="100000" onChange="saveIncome(this)" required>
-        </div>
-        <div class="col-lg-2">
-          <label for="income-raise" class="form-label ">Yearly Raise</label>
-          <input type="number" class="form-control" id="income-raise" min="0" max="50" step="0.01" value="0.05" onChange="saveIncome(this)" required>
-        </div>
-      <div class="col-lg-1">
-        <button type="button" class="btn btn-danger btn-sm remove-row">
-          <i class="bi bi-trash"></i> Remove
-        </button>
-      </div>
-    `;
-
-    // Append the new row to the Income section
-    const incomeSection = document.querySelector('#add-income-button').parentNode.parentNode;
-    incomeSection.appendChild(row);
-
-        // Add event listener to the remove button
-    row.querySelector('.remove-row').addEventListener('click', () => {
-      removeIncome(row.dataset.incomeId); // Call the removeIncome function with the income ID
-      //row.remove();
-    });
-
-    console.log(persons);
-  }
-
-function saveIncome(e) {
-    // Get the parent row of the select element
-    const row = e.closest('.row'); // Get the parent row of the dropdown
-    const incomeId = row.dataset.incomeId; // Get the income ID from the row's dataset
-    const personId = row.dataset.personId; // Get the person ID from the row's dataset
-
-  
+function saveIncome(incomeId) {
     const thisPerson = persons.find(person => person.id == personId); // Get the selected person object
     const incomeData = thisPerson.incomes.find(income => income.id == incomeId); // Get the income object from the selected person's incomes array
     if (!incomeData) {
