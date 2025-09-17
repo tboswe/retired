@@ -14,10 +14,11 @@
 
 .income-section {
   padding-left: 2rem;  /* indent */
-  background-color: #f9f9f9; /* optional for contrast */
+  background-color: #343a40; /* Bootstrap dark grey */
 }
 
 .savings-section {
   padding-left: 2rem;  /* indent */
-  background-color: #f9f9f9; /* optional for contrast */
+  background-color: #00640099; /* dark green with ~60% opacity */
+
 }

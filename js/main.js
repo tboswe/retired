@@ -6,20 +6,13 @@
 let personCounter = 0;
 let incomeCounter = 0;
 let savingsCounter = 0;
-let pensionCounter = 0;
-let assetCounter = 0;
-let debtCounter = 0;
-let expenseCounter = 0;
-const indexationRate = 0.03;
-const inflationRate = 0.03;
+const defaultIndexationRate = 0.03;
+const defaultInflationRate = 0.03;
+const defaultGrowthRate = 0.07;
 
 
 //storage
 const persons = []; // Array to hold person objects
-//const sharedExpenses = []; // Array to hold shared expense objects
-//const sharedDebts = []; // Array to hold shared debt objects
-//const sharedAssets = []; // Array to hold shared asset objects
-
 
 //Objects
 const person = {
@@ -30,10 +23,6 @@ const person = {
   projectionAge: Number,
   incomes: [],
   savings: [],
-  //pensions: [],
-  //assets: [],
-  //debts: [],
-  //expenses: []
 };
 
 //income is for all pre-retirement income, whether salary, bonus, RSU, net income, etc.
@@ -55,7 +44,7 @@ const savings = {
   returnRate: Number // annual growth rate (investment rate)
 };
 
-
+/*Planned for future use
 //pension is for gross retirement income, where one could have a company pension, government pension, CPP, LIF, etc
 const pension = {
   id: Number, 
@@ -88,16 +77,41 @@ const expense = {
   expenseEndDate: Date, // e.g., 2025-12-31
   inflation: Boolean,
   shared: Boolean, // Indicates if the expense is shared
-};
+};*/
 
 //Object to DOM maps
 const personToRowMap = new Map();
+const incomeToRowMap = new Map();
+
+//global functions
+function updateGlobalInflationRate() {
+  const rateInput = document.getElementById('globalInflationRate');
+  const rate = parseFloat(rateInput.value);
+  if (isNaN(rate) || rate < 0 || rate > 1) {
+    alert('Please enter a valid inflation rate between 0 and 1 (e.g., 0.03 for 3%)');
+    return;
+  }
+  console.log(`Global inflation rate updated to: ${rate}`);
+  // Here you can add code to propagate this change to relevant calculations
+  array.forEach(element => {
+    
+  });
+}
 
 //Persons
 function addPerson(){
 
     const personRow = document.createElement('div');
     personRow.className = 'row parent align-items-end mb-3';
+
+        //create person object and add to persons array
+    let newPerson = {
+      id: personCounter
+    };
+    personCounter++; // Increment the ID counter for the next object
+    //push person to persons array
+    persons.push(newPerson);
+    console.log(`Created new person with ID: ${newPerson.id}`);
   
     personRow.innerHTML = `
       <div class="col-lg-2">
@@ -138,16 +152,8 @@ function addPerson(){
         <!-- dynamically added income rows will go here -->
       </div>
     `;
-
-    //create person object and add to persons array
-    let newPerson = {
-      id: personCounter
-    };
-    personCounter++; // Increment the ID counter for the next object
     
-    //push person to persons array
-    persons.push(newPerson);
-    console.log(`Created new person with ID: ${newPerson.id}`);
+
 
     //personToRowMap - map newPerson to personRow that has 'newRow' as id
     personToRowMap.set(newPerson.id,personRow);
@@ -288,7 +294,7 @@ function addIncome(personId) {
       <input type="text" class="form-control" id="income-name" placeholder="Source Name" value='Income' required>
     </div>
     <div class="col-lg-2">
-      <input type="number" class="form-control" id="income-amount" placeholder="50000" value='50000' required>
+      <input type="number" class="form-control" id="income-amount" min="-1000000" max="1000000000" step="5000" value='50000' required>
     </div>
     <div class="col-lg-1">
       <input type="number" class="form-control" id="income-rate" placeholder="Growth Rate" min="-2" max="2" step="0.01" value='0.03' required>
@@ -307,16 +313,32 @@ function addIncome(personId) {
 
     // Create new income object and add to thisPerson.incomes
     const newIncome = {
-      id: incomeCounter++, // Unique ID
+      id: incomeCounter, // Unique ID
       type: 'salary', // Default type
       name: incomeRow.querySelector('#income-name').value || 'Income',
       amount: parseFloat(incomeRow.querySelector('#income-amount').value) || 50000,
       raise: parseFloat(incomeRow.querySelector('#income-rate').value) || 0.03,
     };
+    incomeCounter++; // Increment the ID counter for the next income
+
+    //push new income to person's income array
+    if (!thisPerson.incomes) thisPerson.incomes = [];
+    thisPerson.incomes.push(newIncome);
+    console.log(`Added income for ${thisPerson.name}:`, newIncome);
+
+    // Set income to row map
+    incomeToRowMap.set(newIncome.id, incomeRow);
+
+    // Set data attributes for easy lookup
+    incomeRow.dataset.incomeId = newIncome.id;
+    incomeRow.dataset.personId = thisPerson.id;
+
+    // Save the income immediately
+    saveIncome(newIncome.id);
 
     // Add event listener to the remove button
     incomeRow.querySelector('.remove-row').addEventListener('click', () => {
-      removeIncome(incomeId); // Remove the income row
+      removeIncome(newIncome.id); // Remove the income row
     });
 
     // Add event listeners to input fields for dynamic saving
@@ -328,34 +350,47 @@ function addIncome(personId) {
 
     // Append the income row to the income section
     incomeSection.appendChild(incomeRow);
-
   }
 
 function saveIncome(incomeId) {
-    const thisPerson = persons.find(person => person.id == personId); // Get the selected person object
-    const incomeData = thisPerson.incomes.find(income => income.id == incomeId); // Get the income object from the selected person's incomes array
-    if (!incomeData) {
-        console.error(`Income with ID ${incomeId} not found for person ${thisPerson.name}`);
-        return;
-    }
-    console.log(`Saving income data for person: ${thisPerson.name}, income ID: ${incomeId}`);
-
-    
-    // Update the income object with the new values
-    incomeData.name = row.querySelector('#income-name').value;
-    incomeData.amount = parseFloat(row.querySelector('#income-amount').value);
-    incomeData.raise = parseFloat(row.querySelector('#income-raise').value);
-
-    console.log(persons);
-}
-
-function removeIncome(incomeId) { 
-    const row = document.querySelector(`[data-income-id="${incomeId}"]`); // Get the row element using the income ID
-    if (!row) {
+    const thisIncomeId = Number(incomeId); // normalize type
+    // Find the income row in the DOM
+    const incomeRow = incomeToRowMap.get(thisIncomeId);
+    if (!incomeRow) {
         console.error(`Row with income ID ${incomeId} not found.`);
         return;
     }
-    const personId = row.dataset.personId; // Get the person ID from the row's dataset
+    //find the person in persons array
+    const personId = incomeRow.dataset.personId; // Get the person ID from the row's dataset
+    const pid = Number(personId); // normalize type
+    const personIdx = persons.findIndex(p => p.id == pid); // Get the selected person object
+    if (personIdx === -1) {
+        console.error(`Person with ID ${personId} not found.`);
+        return;
+    }
+    const thisPerson = persons[personIdx];
+
+    // Find the income object in the selected person's incomes array
+    const thisIncome = thisPerson.incomes.find(income => income.id == incomeId); // Get the income object from the selected person's incomes array
+    if (!thisIncome) {
+        console.error(`Income with ID ${incomeId} not found for person ${thisPerson.name}`);
+        return;
+    }
+
+    // Update the income object with values from the input fields
+    thisIncome.name = incomeRow.querySelector('#income-name').value || 'Income';
+    thisIncome.amount = parseFloat(incomeRow.querySelector('#income-amount').value) || 50000;
+    thisIncome.raise = parseFloat(incomeRow.querySelector('#income-rate').value) || 0.03;
+    console.log(`Saved income for ${thisPerson.name}:`, thisIncome);
+}
+
+function removeIncome(incomeId) { 
+    const incomeRow = incomeToRowMap.get(incomeId);
+    if (!incomeRow) {
+        console.error(`Row with income ID ${incomeId} not found.`);
+        return;
+    }
+    const personId = incomeRow.dataset.personId; // Get the person ID from the row's dataset
     const person = persons.find(p => p.id == personId); // Get the selected person object
     if (!person) {
         console.error(`Person with ID ${personId} not found.`);
@@ -377,7 +412,7 @@ function removeIncome(incomeId) {
         console.error(`Income with ID ${incomeId} not found in person's incomes array.`);
     }
     // Remove the row from the DOM
-    row.remove(); // Remove the row from the DOM
+    incomeRow.remove(); // Remove the row from the DOM
 
     console.log(persons);
 }
@@ -442,7 +477,7 @@ savingsSection.appendChild(savingsRow);
   savingsRow.querySelector('.remove-row').addEventListener('click', () => savingsRow.remove());
 }
 
-function addSavings(element) {
+function addSavings(personId) {
   const row = element.closest('.row');
   const personSelect = row.querySelector('#savings-person');
   const personIndex = personSelect.value;
@@ -482,7 +517,11 @@ function addSavings(element) {
   row.querySelector('.remove-row').addEventListener('click', () => removeSavings(thisPerson.id, newSavings.id));
 }
 
-function removeSavings(personId, savingsId) {
+function saveSavings(savingsId){
+
+}
+
+function removeSavings(savingsId) {
   // Find the person
   const person = persons.find(p => p.id == personId);
   if (!person) {
@@ -508,11 +547,6 @@ function removeSavings(personId, savingsId) {
     console.warn(`DOM row for savings ID ${savingsId} not found.`);
   }
 }
-
-
-//Pension Functions
-
-//Expense Functions
 
 //Projection
 function generateProjection() {
@@ -574,37 +608,34 @@ function generateProjection() {
       // Initialize income amounts for each income source
       // Loop through each year from current age to projection age
       for (let age = persons[i].age; age <= persons[i].projectionAge; age++) {
-        const year = new Date().getFullYear() + (age - persons[i].age);
-        let row = `<tr><td>${year}</td>`;
-        row += `<td>${age}</td>`;
+  const year = new Date().getFullYear() + (age - persons[i].age);
+  let row = `<tr><td>${year}</td><td>${age}</td>`;
 
-        //let totalIncome = 0;
-        if (age < persons[i].retirementAge) {
-          // Sum all incomes for this year
-          for (let j = 0; j < persons[i].incomes.length; j++) {
-            //totalIncome += incomeAmounts[j];
-            // Update the amount for next year
-            incomeAmounts[j] *= (1 + persons[i].incomes[j].raise);
-          
-            row += `<td>${incomeAmounts[j].toFixed(0)}</td>`;
-          }
-        } else {
-          row += `<td></td>`;
-        }
-        if (persons[i].savings && persons[i].savings.length > 0) {
-          for (let j = 0; j < persons[i].savings.length; j++) {
-            const s = persons[i].savings[j];
+  if (age < persons[i].retirementAge) {
+    for (let j = 0; j < persons[i].incomes.length; j++) {
+      row += `<td>${incomeAmounts[j].toFixed(0)}</td>`;
+      if (age < persons[i].projectionAge) {
+        incomeAmounts[j] *= (1 + persons[i].incomes[j].raise);
+      }
+    }
+  } else {
+    // retired → no income
+    for (let j = 0; j < persons[i].incomes.length; j++) {
+      row += `<td></td>`;
+    }
+  }
 
-            // Initialize yearly amount if not exists
-            if (s.amountByYear === undefined) s.amountByYear = s.amount; {
+  if (persons[i].savings && persons[i].savings.length > 0) {
+    for (let j = 0; j < persons[i].savings.length; j++) {
+      const s = persons[i].savings[j];
+      if (s.amountByYear === undefined) s.amountByYear = s.amount;
 
-              // Grow by rate (e.g., investmentRate)
-              s.amountByYear *= (1 + (s.returnRate || 0)); 
-
-              row += `<td>${s.amountByYear.toFixed(0)}</td>`;
-            }
-          }
-        }
+      row += `<td>${s.amountByYear.toFixed(0)}</td>`;
+      if (age < persons[i].projectionAge) {
+        s.amountByYear *= (1 + (s.returnRate || 0));
+      }
+    }
+  }
 
   row += '</tr>';
   tbody.innerHTML += row;
