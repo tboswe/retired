@@ -84,35 +84,257 @@ const personToRowMap = new Map();
 const incomeToRowMap = new Map();
 const savingsToRowMap = new Map();
 
-//global functions
-function updateGlobalInflationRate() {
-  const rateInput = document.getElementById('globalInflationRate');
-  const rate = parseFloat(rateInput.value);
-  if (isNaN(rate) || rate < 0 || rate > 1) {
-    alert('Please enter a valid inflation rate between 0 and 1 (e.g., 0.03 for 3%)');
-    return;
+//import/export buttons
+// Encryption import/export utilities using Web Crypto API
+// Usage note: replace getAppData() and applyImportedData(data) with your app's functions.
+
+//wire buttons
+
+
+(() => {
+  const TEXT_ENCODER = new TextEncoder();
+  const TEXT_DECODER = new TextDecoder();
+
+  // CONFIG
+  const KDF_ITERATIONS = 250000; // adjustable: higher = slower but stronger
+  const SALT_BYTES = 16;
+  const IV_BYTES = 12; // recommended for AES-GCM
+
+  // Helpers: ArrayBuffer <-> base64
+  function bufToBase64(buf) {
+    const bytes = new Uint8Array(buf);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
   }
-  console.log(`Global inflation rate updated to: ${rate}`);
-  // Here you can add code to propagate this change to relevant calculations
-  array.forEach(element => {
-    
+  function base64ToBuf(b64) {
+    const binary = atob(b64);
+    const len = binary.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes.buffer;
+  }
+
+  // Derive AES-GCM key via PBKDF2 from password and salt
+  async function deriveKeyFromPassword(password, salt, iterations = KDF_ITERATIONS) {
+    const pwUtf8 = TEXT_ENCODER.encode(password);
+    const baseKey = await crypto.subtle.importKey('raw', pwUtf8, 'PBKDF2', false, ['deriveKey']);
+    const key = await crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
+      baseKey,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt', 'decrypt']
+    );
+    return key;
+  }
+
+  async function encryptJsonObject(obj, password) {
+    const salt = crypto.getRandomValues(new Uint8Array(SALT_BYTES));
+    const iv = crypto.getRandomValues(new Uint8Array(IV_BYTES));
+    const key = await deriveKeyFromPassword(password, salt, KDF_ITERATIONS);
+
+    const plaintext = TEXT_ENCODER.encode(JSON.stringify(obj));
+    const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, plaintext);
+
+    return {
+      version: 1,
+      alg: 'AES-GCM',
+      kdf: 'PBKDF2',
+      iterations: KDF_ITERATIONS,
+      salt: bufToBase64(salt.buffer),
+      iv: bufToBase64(iv.buffer),
+      data: bufToBase64(ciphertext)
+    };
+  }
+
+  async function decryptToJsonObject(fileObj, password) {
+    if (!fileObj.salt || !fileObj.iv || !fileObj.data) throw new Error('File missing required fields.');
+    const saltBuf = base64ToBuf(fileObj.salt);
+    const ivBuf = base64ToBuf(fileObj.iv);
+    const dataBuf = base64ToBuf(fileObj.data);
+
+    const key = await deriveKeyFromPassword(password, new Uint8Array(saltBuf), fileObj.iterations || KDF_ITERATIONS);
+    const plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(ivBuf) }, key, dataBuf);
+    const jsonText = TEXT_DECODER.decode(plainBuf);
+    return JSON.parse(jsonText);
+  }
+
+  // File download helper
+  function downloadObjectAsFile(obj, filename = 'export.enc.json') {
+    const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  // Return the data to export (any JSON-serializable object)
+  function getAppData() {
+    return persons.length > 0 ? { persons } : null;
+  }
+
+  
+  // Apply imported data back to the app. Implement as needed.
+  function applyImportedData(obj) {
+    // Example: if obj has persons array, replace current persons
+    if (Array.isArray(obj.persons)) {
+      persons.clear; // clear current
+      // Rebuild the UI as needed
+      document.getElementById('persons-section').innerHTML = '';
+      personToRowMap.clear();
+      incomeToRowMap.clear();
+      savingsToRowMap.clear();
+      //re-add all persons from obj.persons, let the function do it's job
+      obj.persons.forEach(p => {
+        //add the person first
+        addPerson(p.id);
+        //once p is added, set the DOM
+        personToRowMap.get(p.id).querySelector('#person-name').value = p.name || `Person ${p.id}`;
+        personToRowMap.get(p.id).querySelector('#person-current-age').value = p.age || 30;
+        personToRowMap.get(p.id).querySelector('#person-retirement-age').value = p.retirementAge || 55;
+        personToRowMap.get(p.id).querySelector('#person-projection-age').value = p.projectionAge || 100;
+        //once DOM set, call savePerson to set object properly
+        savePerson(p.id);
+        //add the incomes for that person
+        p.incomes.forEach(i => {
+          //add the income to the person
+          addIncome(p.id);
+          //once income added, set the DOM
+          incomeToRowMap.get(i.id).querySelector('#income-name').value = i.name || 'Income';
+          incomeToRowMap.get(i.id).querySelector('#income-amount').value = i.amount || 50000;
+          incomeToRowMap.get(i.id).querySelector('#income-rate').value = i.raise || 0.03;
+          //once DOM set, call updateIncome to set object properly
+          updateIncome(i.id);
+        });
+        //add the savings for that person
+        p.savings.forEach( s => {
+          //add the savings to the person
+          addSavings(p.id);
+          //once savings added, set the DOM
+          savingsToRowMap.get(s.id).querySelector('#savings-name').value = s.name || 'Savings';
+          savingsToRowMap.get(s.id).querySelector('#savings-amount').value = s.amount || 10000;
+          savingsToRowMap.get(s.id).querySelector('#savings-taxfree').checked = s.taxfree || false;
+          savingsToRowMap.get(s.id).querySelector('#savings-returnRate').value = s.returnRate || 0.07;
+          //once DOM set, call updateSavings to set object properly
+          updateSavings(s.id);
+        });
+      })
+    }
+  }
+  // -----------------------------------------------------------
+
+  // Export flow
+  async function exportData() {
+    try {
+      const data = getAppData();
+      if (!data) { alert('No data available to export.'); return; }
+
+      // Ask user for a password
+      const password = prompt('Enter a password to encrypt your export file (do NOT forget it):');
+      if (password === null) return; // user cancelled
+      if (password.length === 0) {
+        if (!confirm('You entered an empty password. This will create an unencrypted export. Continue?')) return;
+        // produce plaintext export
+        downloadObjectAsFile({ version: 1, alg: 'none', data: data }, `export-${new Date().toISOString()}.json`);
+        return;
+      }
+
+      // Encrypt and download
+      const encObj = await encryptJsonObject(data, password);
+      const filename = `export-${new Date().toISOString().slice(0,19).replace(/[:T]/g, '-')}.enc.json`;
+      downloadObjectAsFile(encObj, filename);
+      alert('Exported encrypted file. Keep your password safe.');
+    } catch (err) {
+      console.error(err);
+      alert('Export failed: ' + (err && err.message ? err.message : String(err)));
+    }
+  }
+
+  // Import flow
+  function importData() {
+    // create file input if not present
+    let fi = document.getElementById('__import-file-input');
+    if (!fi) {
+      fi = document.createElement('input');
+      fi.type = 'file';
+      fi.accept = '.json,.enc.json,application/json';
+      fi.style.display = 'none';
+      fi.id = '__import-file-input';
+      document.body.appendChild(fi);
+      fi.addEventListener('change', async (e) => {
+        const f = e.target.files[0];
+        fi.value = ''; // reset
+        if (!f) return;
+        try {
+          const text = await f.text();
+          const parsed = JSON.parse(text);
+
+          if (parsed.alg === 'none') {
+            // plaintext export
+            if (!confirm('File appears to be unencrypted. Do you want to import it?')) return;
+            applyImportedData(parsed.data);
+            alert('Imported plaintext data.');
+            return;
+          }
+
+          // encrypted file
+          const password = prompt('Enter the password to decrypt the import file:');
+          if (password === null) return; // cancelled
+
+          try {
+            const decrypted = await decryptToJsonObject(parsed, password);
+            applyImportedData(decrypted);
+            alert('Import successful.');
+          } catch (decryptErr) {
+            console.error(decryptErr);
+            alert('Decryption failed. Wrong password or corrupted file.');
+          }
+        } catch (err) {
+          console.error(err);
+          alert('Failed to read/parse file: ' + (err.message || err));
+        }
+      });
+    }
+    fi.click();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const eb = document.getElementById('export-btn');
+    const ib = document.getElementById('import-btn');
+    if (eb) eb.addEventListener('click', exportData);
+    if (ib) ib.addEventListener('click', importData);
   });
-}
+})();
 
 //Persons
-function addPerson(){
+function addPerson(pid){
     const personRow = document.createElement('div');
     personRow.className = 'row parent align-items-end mb-3';
 
-        //create person object and add to persons array
-    let newPerson = {
-      id: personCounter
-    };
-    personCounter++; // Increment the ID counter for the next object
+    let newPerson;
+    //if pid = 0, it's a new add
+    if(pid == 0){
+      newPerson = {
+        id: personCounter
+      };
+      personCounter++ //increment the counter
+      console.log(`Created new person with ID: ${newPerson.id}`);
+    } else { //otherwise it's an import
+      newPerson = {
+        id: pid
+      }
+      personCounter = pid+1 //push counter past given id to avoid collisions
+      console.log(`imported person with ID: ${newPerson.id}`);
+    }
+    
     //push person to persons array
     persons.push(newPerson);
-    console.log(`Created new person with ID: ${newPerson.id}`);
-  
+    
     personRow.innerHTML = `
       <div class="col-lg-2">
         <label for="person-name" class="form-label">Name</label>
@@ -583,7 +805,7 @@ function deleteSavings(savingsId) {
     // Find the savings object in the selected person's savings array
     const savings = person.savings.find(i => i.id == savingsId); // Get the savings object from the selected person's savings array
     if (!savings) {
-        console.error(`savings with ID ${savingsId} not found for person ${person.name}`);
+        //console.error(`savings with ID ${savingsId} not found for person ${person.name}`);
         return;
     }
     // Remove the savings object from the selected person's savings array

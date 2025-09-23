@@ -25,27 +25,25 @@
   <div class="container py-5">
     <h1 class="text-center">Retired</h1>
     <p class="text-muted text-center">Project your retirement</p>
+    <!--
     <div class="d-flex justify-content-center my-3">
       <button class="btn btn-primary btn-lg btn-block" id="project" onclick="generateProjection()">Project</button>
-    </div>
+    </div> -->
   </div>
 
   <!-- Global -->
-  <div class="container py-3  border border-secondary rounded">
+  <div class="container py-3 d-flex border border-secondary rounded">
   <span>
-<button type="button" class="btn btn-primary btn-sm me-2" onclick="addPerson()">
+<button type="button" id="addPerson-btn" class="btn btn-primary btn-sm me-2" onclick="addPerson(0)">
   <i class="bi bi-plus"></i> Add Person
 </button>
-<label for="globalInflationRate" class="form-label ms-4 me-2">Global Inflation Rate:</label>
-<input type="number" id="globalInflationRate" class="form-control form-control-sm" style="width: 100px; display: inline;" value="0.03" min="0" step="0.01">
-<button type="button" class="btn btn-primary btn-sm" onclick="updateGlobalInflationRate()">
-  <i class="bi bi-arrow-clockwise"></i> 
+<button type="button" id="import-btn" class="btn btn-secondary btn-sm ms-2">
+  <i class="bi bi-file-earmark-arrow-up"></i> Import
 </button>
-<label for="globalGrowthRate" class="form-label ms-4 me-2">Global Growth Rate:</label>
-<input type="number" id="globalGrowthRate" class="form-control form-control-sm me-2" style="width: 100px; display: inline;" value="0.07" min="0" step="0.01">
-<button type="button" class="btn btn-primary btn-sm" onclick="updateGlobalGrowthRate()">
-  <i class="bi bi-arrow-clockwise"></i>
-</button>
+<button type="button" id="export-btn" class="btn btn-secondary btn-sm ms-2">
+  <i class="bi bi-file-earmark-arrow-down"></i> Export
+</button> 
+<i class="ms-2">Click "Add Person" to add financial scenarios.  Export to save your work.  Import to continue your work.</i>
   </span>
       <div id="global-section"></div>
   </div>
