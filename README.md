@@ -1,24 +1,15 @@
 # retired
-A tool to project earnings and retirement
+A tool to project earnings and retirement.  Currently can project several scenarios, but without any linking (like for spousal considerations).
 
-Scenarios
-single - not retired
-single - retired
-couple - not retired + not retired
-couple - not retired + retired
-couple - retired + retired
+Current capabilities
+- Income (+raise %)
+- Saving Accounts (taxed or not taxed, without contributions)
+- Import/Export (password encrypted/decrypted .bin)
 
-Saving Accounts
-Cash
-Margin
-RSP
-SRSP
-TFSA
-LRSP
-LIRA
+Current Work
+- Location (for effective tax estimation)
 
-Pension Accounts
-Government Pension
-Registered Pension
-LIF
+Planned Work
+- Year ranges for income (for specific job raises, or job changes)
+- Contributions (for savings)
 
