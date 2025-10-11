@@ -879,11 +879,14 @@ function generateProjection() {
     table.className = 'table table-striped table-bordered table-sm';
     table.id = `projection-table-${person.id}`;
 
-    const columns = ['Year', 'Age'];
-    person.incomes.forEach(inc => columns.push(inc.name));
+    //Headers
+    const columns = ['Year', 'Age']; //start with year and age on left
+    person.incomes.forEach(inc => columns.push(inc.name)); //add every income
+    columns.push('Total Gross'); //add total gross income column
+    //columns.push('Total Net'); //add total net income column
     person.savings.forEach(sav =>
       columns.push(sav.taxfree ? `${sav.name}*` : sav.name)
-    );
+    );//add every savings
 
     const thead = document.createElement('thead');
     let headerRow = `<tr><th colspan="${columns.length}"><h3>${person.name}</h3></th></tr><tr>`;
@@ -899,14 +902,20 @@ function generateProjection() {
 
     for (let age = person.age; age <= person.projectionAge; age++) {
       const year = currentYear + (age - person.age);
+      //year and age
       let row = `<tr><td>${year}</td><td>${age}</td>`;
-
+      
+      //incomes and total gross
+      let totalGross = Number(0);
       for (let j = 0; j < person.incomes.length; j++) {
         const val = age < person.retirementAge ? incomeAmounts[j].toFixed(0) : '';
         row += `<td>${val}</td>`;
+        totalGross = totalGross + Number(val); //accumulate income into total gross income for that year
         if (age < person.retirementAge && age < person.projectionAge)
           incomeAmounts[j] *= (1 + person.incomes[j].raise);
       }
+      //add the total gross once added up
+      row += `<td>${Number(totalGross)}</td>`;
 
       for (let j = 0; j < person.savings.length; j++) {
         row += `<td>${savingsAmounts[j].toFixed(0)}</td>`;
